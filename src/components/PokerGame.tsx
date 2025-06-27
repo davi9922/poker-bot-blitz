@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import PokerCard from "./PokerCard";
 import GameSettings, { GameConfig } from "./GameSettings";
+import ChipStack from "./ChipStack";
+import CasinoChip from "./CasinoChip";
 import { usePokerGame } from "@/hooks/usePokerGame";
 import { Coins, Bot, User, Crown } from "lucide-react";
 
@@ -97,11 +99,14 @@ const PokerGame = () => {
               </div>
             </div>
 
-            {/* Enhanced Pot display */}
+            {/* Enhanced Pot display with casino chips */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-24">
-              <div className="bg-gradient-to-r from-amber-600 to-amber-500 text-white px-6 py-3 rounded-full shadow-xl border-2 border-amber-400 flex items-center gap-3 font-bold text-lg">
-                <Coins className="w-6 h-6 text-yellow-200 animate-pulse" />
-                <span>POT: {pot.toLocaleString()}</span>
+              <div className="flex flex-col items-center gap-2">
+                {pot > 0 && <ChipStack totalChips={pot} size="sm" showTotal={false} />}
+                <div className="bg-gradient-to-r from-amber-600 to-amber-500 text-white px-6 py-3 rounded-full shadow-xl border-2 border-amber-400 flex items-center gap-3 font-bold text-lg">
+                  <Coins className="w-6 h-6 text-yellow-200 animate-pulse" />
+                  <span>POT: {pot.toLocaleString()}</span>
+                </div>
               </div>
             </div>
 
@@ -118,7 +123,7 @@ const PokerGame = () => {
                   style={{ left: `${position.x}%`, top: `${position.y}%` }}
                 >
                   {/* Player info with enhanced styling */}
-                  <div className={`mb-3 text-center ${index === 0 ? 'mb-16' : 'mt-16'}`}>
+                  <div className={`mb-3 text-center ${index === 0 ? 'mb-20' : 'mt-20'}`}>
                     <div className={`flex items-center justify-center gap-2 px-4 py-2 rounded-full shadow-lg border-2 ${
                       isCurrentPlayer 
                         ? 'bg-yellow-500 text-black border-yellow-400 animate-pulse' 
@@ -130,18 +135,15 @@ const PokerGame = () => {
                       {player.isBot ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
                       <span className="text-sm font-bold">{player.name}</span>
                     </div>
-                    <div className={`mt-1 px-3 py-1 rounded-full text-xs font-semibold ${
-                      player.chips > gameConfig.startingChips 
-                        ? 'bg-green-500 text-white' 
-                        : player.chips < gameConfig.startingChips * 0.5
-                          ? 'bg-red-500 text-white'
-                          : 'bg-gray-600 text-white'
-                    }`}>
-                      {player.chips.toLocaleString()} fichas
+                    
+                    {/* Player chip stack */}
+                    <div className="mt-2 flex flex-col items-center gap-1">
+                      <ChipStack totalChips={player.chips} size="sm" />
                       {player.currentBet > 0 && (
-                        <span className="ml-2 bg-white text-black px-2 py-0.5 rounded">
-                          Apostó: {player.currentBet}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-green-200">Apostó:</span>
+                          <CasinoChip value={player.currentBet} size="sm" />
+                        </div>
                       )}
                     </div>
                   </div>
