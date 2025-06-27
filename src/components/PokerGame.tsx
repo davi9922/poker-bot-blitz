@@ -56,7 +56,7 @@ const PokerGame = () => {
   const canCall = currentBet > (players[0]?.currentBet || 0);
   const canRaise = playerChips >= betAmount;
 
-  // Calculate player positions around the table - human player always at bottom
+  // Calculate player positions around the table - players are now outside the table
   const getPlayerPosition = (index: number, total: number) => {
     let angle;
     if (index === 0) {
@@ -77,149 +77,153 @@ const PokerGame = () => {
       }
     }
     
-    const radius = 35; // percentage from center
+    // Increased radius to place players outside the table
+    const radius = 50; // percentage from center - increased from 35
     const x = 50 + radius * Math.cos((angle - 90) * Math.PI / 180);
     const y = 50 + radius * Math.sin((angle - 90) * Math.PI / 180);
     return { x, y, angle };
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Enhanced Poker Table */}
-      <div className="relative">
-        {/* Outer table ring with premium look */}
-        <div className="mx-auto w-[900px] h-[600px] bg-gradient-to-br from-amber-900 via-amber-800 to-amber-700 rounded-full border-8 border-amber-900 shadow-2xl relative">
-          {/* Table texture overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-amber-700/20 to-amber-900/40 rounded-full"></div>
-          
-          {/* Inner playing surface */}
-          <div className="absolute inset-6 bg-gradient-to-br from-green-700 via-green-800 to-green-900 rounded-full border-4 border-green-600 shadow-inner">
-            {/* Felt texture */}
-            <div className="absolute inset-0 bg-gradient-to-br from-green-600/10 to-green-900/30 rounded-full"></div>
+    <div className="max-w-7xl mx-auto p-8">
+      {/* Container for the entire game area */}
+      <div className="relative w-[1000px] h-[700px] mx-auto">
+        
+        {/* Enhanced Poker Table - now smaller to make room for players */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <div className="w-[700px] h-[450px] bg-gradient-to-br from-amber-900 via-amber-800 to-amber-700 rounded-full border-8 border-amber-900 shadow-2xl relative">
+            {/* Table texture overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-amber-700/20 to-amber-900/40 rounded-full"></div>
             
-            {/* Central community cards area with premium styling */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-36 bg-gradient-to-br from-green-600 to-green-700 rounded-xl border-2 border-green-500 shadow-inner">
-              {/* Inner border for cards */}
-              <div className="absolute inset-2 border border-green-400 rounded-lg bg-green-600/50">
-                <div className="flex items-center justify-center h-full gap-2">
-                  {communityCards.length > 0 ? (
-                    communityCards.map((card, index) => (
-                      <div key={index} className="transform hover:scale-105 transition-transform">
-                        <PokerCard card={card} />
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-green-300 text-sm font-semibold tracking-wide">
-                      COMMUNITY CARDS
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Enhanced Pot display with casino chips */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-24">
-              <div className="flex flex-col items-center gap-2">
-                {pot > 0 && <ChipStack totalChips={pot} size="sm" showTotal={false} />}
-                <div className="bg-gradient-to-r from-amber-600 to-amber-500 text-white px-6 py-3 rounded-full shadow-xl border-2 border-amber-400 flex items-center gap-3 font-bold text-lg">
-                  <Coins className="w-6 h-6 text-yellow-200 animate-pulse" />
-                  <span>POT: {pot.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Dynamic player positions */}
-            {players.map((player, index) => {
-              const position = getPlayerPosition(index, players.length);
-              const isCurrentPlayer = currentPlayerIndex === index;
-              const isWinner = winners.includes(player.id);
-              const isHuman = index === 0;
+            {/* Inner playing surface */}
+            <div className="absolute inset-6 bg-gradient-to-br from-green-700 via-green-800 to-green-900 rounded-full border-4 border-green-600 shadow-inner">
+              {/* Felt texture */}
+              <div className="absolute inset-0 bg-gradient-to-br from-green-600/10 to-green-900/30 rounded-full"></div>
               
-              return (
-                <div
-                  key={player.id}
-                  className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                  style={{
-                    left: `${position.x}%`,
-                    top: `${position.y}%`
-                  }}
-                >
-                  {/* Player info with enhanced styling */}
-                  <div className={`mb-3 text-center ${isHuman ? 'mb-20' : 'mt-20'}`}>
-                    <div className={`flex items-center justify-center gap-2 px-4 py-2 rounded-full shadow-lg border-2 ${
-                      isCurrentPlayer 
-                        ? 'bg-yellow-500 text-black border-yellow-400 animate-pulse' 
-                        : player.isBot 
-                        ? 'bg-red-600 text-white border-red-500' 
-                        : 'bg-blue-600 text-white border-blue-500'
-                    }`}>
-                      {isWinner && <Crown className="w-4 h-4 text-yellow-300" />}
-                      {player.isBot ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
-                      <span className="text-sm font-bold">{player.name}</span>
-                    </div>
-                    
-                    {/* Player chip stack */}
-                    <div className="mt-2 flex flex-col items-center gap-1">
-                      <ChipStack totalChips={player.chips} size="sm" />
-                      {player.currentBet > 0 && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-green-200">Apostó:</span>
-                          <CasinoChip value={player.currentBet} size="sm" />
+              {/* Central community cards area with premium styling */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-28 bg-gradient-to-br from-green-600 to-green-700 rounded-xl border-2 border-green-500 shadow-inner">
+                {/* Inner border for cards */}
+                <div className="absolute inset-2 border border-green-400 rounded-lg bg-green-600/50">
+                  <div className="flex items-center justify-center h-full gap-2">
+                    {communityCards.length > 0 ? (
+                      communityCards.map((card, index) => (
+                        <div key={index} className="transform hover:scale-105 transition-transform">
+                          <PokerCard card={card} />
                         </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Player cards */}
-                  <div className="flex gap-2 justify-center">
-                    {player.hand.map((card, cardIndex) => (
-                      <div key={cardIndex} className="transform hover:scale-105 transition-transform">
-                        <PokerCard 
-                          card={showdown || !player.isBot ? card : null} 
-                          faceDown={!showdown && player.isBot} 
-                        />
+                      ))
+                    ) : (
+                      <div className="text-green-300 text-sm font-semibold tracking-wide">
+                        COMMUNITY CARDS
                       </div>
-                    ))}
+                    )}
                   </div>
-                  
-                  {/* Folded indicator */}
-                  {player.isFolded && (
-                    <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
-                      <span className="text-red-500 font-bold text-sm">FOLD</span>
-                    </div>
-                  )}
                 </div>
-              );
-            })}
-
-            {/* Game phase indicator with enhanced styling */}
-            <div className="absolute top-6 right-6">
-              <div className="bg-gradient-to-r from-purple-600 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg border border-purple-400">
-                {gamePhase === 'preflop' && '🃏 PRE-FLOP'}
-                {gamePhase === 'flop' && '🎰 FLOP'}
-                {gamePhase === 'turn' && '🎲 TURN'}
-                {gamePhase === 'river' && '🌊 RIVER'}
-                {gamePhase === 'showdown' && '👑 SHOWDOWN'}
               </div>
+
+              {/* Enhanced Pot display with casino chips */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-20">
+                <div className="flex flex-col items-center gap-2">
+                  {pot > 0 && <ChipStack totalChips={pot} size="sm" showTotal={false} />}
+                  <div className="bg-gradient-to-r from-amber-600 to-amber-500 text-white px-4 py-2 rounded-full shadow-xl border-2 border-amber-400 flex items-center gap-2 font-bold">
+                    <Coins className="w-5 h-5 text-yellow-200 animate-pulse" />
+                    <span className="text-sm">POT: {pot.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Game phase indicator with enhanced styling */}
+              <div className="absolute top-4 right-4">
+                <div className="bg-gradient-to-r from-purple-600 to-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg border border-purple-400">
+                  {gamePhase === 'preflop' && '🃏 PRE-FLOP'}
+                  {gamePhase === 'flop' && '🎰 FLOP'}
+                  {gamePhase === 'turn' && '🎲 TURN'}
+                  {gamePhase === 'river' && '🌊 RIVER'}
+                  {gamePhase === 'showdown' && '👑 SHOWDOWN'}
+                </div>
+              </div>
+
+              {/* Turn indicator */}
+              {gameState === 'playing' && !showdown && (
+                <div className="absolute top-4 left-4">
+                  <div className={`px-3 py-1 rounded-full text-xs font-bold shadow-lg ${
+                    playerTurn 
+                      ? 'bg-blue-600 text-white animate-pulse' 
+                      : 'bg-gray-600 text-white'
+                  }`}>
+                    {playerTurn ? '🎯 TU TURNO' : '⏳ ESPERANDO...'}
+                  </div>
+                </div>
+              )}
             </div>
-
-            {/* Turn indicator */}
-            {gameState === 'playing' && !showdown && (
-              <div className="absolute top-6 left-6">
-                <div className={`px-4 py-2 rounded-full text-sm font-bold shadow-lg ${
-                  playerTurn 
-                    ? 'bg-blue-600 text-white animate-pulse' 
-                    : 'bg-gray-600 text-white'
-                }`}>
-                  {playerTurn ? '🎯 TU TURNO' : '⏳ ESPERANDO...'}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Control area below table */}
-        <div className="mt-8 text-center space-y-4">
+        {/* Dynamic player positions - now positioned around the table */}
+        {players.map((player, index) => {
+          const position = getPlayerPosition(index, players.length);
+          const isCurrentPlayer = currentPlayerIndex === index;
+          const isWinner = winners.includes(player.id);
+          const isHuman = index === 0;
+          
+          return (
+            <div
+              key={player.id}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2"
+              style={{
+                left: `${position.x}%`,
+                top: `${position.y}%`
+              }}
+            >
+              {/* Player info with enhanced styling */}
+              <div className={`${isHuman ? 'mb-4' : 'mt-4'} text-center`}>
+                <div className={`flex items-center justify-center gap-2 px-4 py-2 rounded-full shadow-lg border-2 ${
+                  isCurrentPlayer 
+                    ? 'bg-yellow-500 text-black border-yellow-400 animate-pulse' 
+                    : player.isBot 
+                    ? 'bg-red-600 text-white border-red-500' 
+                    : 'bg-blue-600 text-white border-blue-500'
+                }`}>
+                  {isWinner && <Crown className="w-4 h-4 text-yellow-300" />}
+                  {player.isBot ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                  <span className="text-sm font-bold">{player.name}</span>
+                </div>
+                
+                {/* Player chip stack */}
+                <div className="mt-2 flex flex-col items-center gap-1">
+                  <ChipStack totalChips={player.chips} size="sm" />
+                  {player.currentBet > 0 && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-green-200">Apostó:</span>
+                      <CasinoChip value={player.currentBet} size="sm" />
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Player cards */}
+              <div className="flex gap-2 justify-center">
+                {player.hand.map((card, cardIndex) => (
+                  <div key={cardIndex} className="transform hover:scale-105 transition-transform">
+                    <PokerCard 
+                      card={showdown || !player.isBot ? card : null} 
+                      faceDown={!showdown && player.isBot} 
+                    />
+                  </div>
+                ))}
+              </div>
+              
+              {/* Folded indicator */}
+              {player.isFolded && (
+                <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                  <span className="text-red-500 font-bold text-sm">FOLD</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Control area below the game */}
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full text-center space-y-4">
           {/* Game result */}
           {winners.length > 0 && (
             <div className={`text-2xl font-bold p-4 rounded-lg inline-block shadow-lg ${
