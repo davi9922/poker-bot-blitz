@@ -62,6 +62,120 @@ export const usePokerGame = (config: GameConfig) => {
     initializePlayers();
   }, [initializePlayers]);
 
+  const moveToNextPlayer = useCallback(() => {
+    setCurrentPlayerIndex(prevIndex => {
+      const nextIndex = (prevIndex + 1) % players.length;
+      // Skip folded players
+      let finalIndex = nextIndex;
+      let attempts = 0;
+      while (players[finalIndex]?.isFolded && attempts < players.length) {
+        finalIndex = (finalIndex + 1) % players.length;
+        attempts++;
+      }
+      return finalIndex;
+    });
+  }, [players.length]);
+
+  const checkRoundComplete = useCallback(() => {
+    const activePlayers = players.filter(p => !p.isFolded);
+    if (activePlayers.length <= 1) return true;
+    
+    // Check if all active players have equal bets or if everyone has acted
+    const maxBet = Math.max(...activePlayers.map(p => p.currentBet));
+    const allBetsEqual = activePlayers.every(p => p.currentBet === maxBet);
+    
+    return allBetsEqual;
+  }, [players]);
+
+  // Bot AI logic with improved decision making
+  const executeBotAction = useCallback(() => {
+    const currentPlayer = players[currentPlayerIndex];
+    if (!currentPlayer || !currentPlayer.isBot || showdown) return;
+
+    console.log(`Bot ${currentPlayer.name} is thinking...`);
+    
+    const botAction = getBotAction(
+      currentPlayer.hand,
+      communityCards,
+      currentBet - currentPlayer.currentBet,
+      currentPlayer.chips,
+      pot
+    );
+
+    console.log(`Bot ${currentPlayer.name} decides to:`, botAction);
+
+    // Execute bot action after a delay to simulate thinking
+    setTimeout(() => {
+      const updatedPlayers = [...players];
+      
+      if (botAction.action === 'fold') {
+        updatedPlayers[currentPlayerIndex].isFolded = true;
+        toast({
+          title: "Bot se retira",
+          description: `${currentPlayer.name} se retira de la mano`,
+        });
+      } else if (botAction.action === 'check') {
+        // No chips to add for check
+        toast({
+          title: "Bot hace check",
+          description: `${currentPlayer.name} hace check`,
+        });
+      } else if (botAction.action === 'call') {
+        const callAmount = currentBet - currentPlayer.currentBet;
+        updatedPlayers[currentPlayerIndex].chips -= callAmount;
+        updatedPlayers[currentPlayerIndex].currentBet = currentBet;
+        setPot(prev => prev + callAmount);
+        toast({
+          title: "Bot iguala",
+          description: `${currentPlayer.name} iguala con ${callAmount} fichas`,
+        });
+      } else if (botAction.action === 'raise') {
+        const raiseAmount = botAction.amount || 20;
+        const totalBet = Math.max(currentBet + raiseAmount, currentPlayer.currentBet + raiseAmount);
+        const actualBet = totalBet - currentPlayer.currentBet;
+        updatedPlayers[currentPlayerIndex].chips -= actualBet;
+        updatedPlayers[currentPlayerIndex].currentBet = totalBet;
+        setCurrentBet(totalBet);
+        setPot(prev => prev + actualBet);
+        toast({
+          title: "Bot sube la apuesta",
+          description: `${currentPlayer.name} sube a ${totalBet} fichas`,
+        });
+      }
+      
+      setPlayers(updatedPlayers);
+      
+      // Check if only one player remains
+      const activePlayers = updatedPlayers.filter(p => !p.isFolded);
+      if (activePlayers.length === 1) {
+        setWinners([activePlayers[0].id]);
+        updatedPlayers[activePlayers[0].id].chips += pot;
+        setPot(0);
+        setGameState('finished');
+        toast({
+          title: "Ganador por abandono",
+          description: `${activePlayers[0].name} gana ${pot} fichas`,
+        });
+        return;
+      }
+      
+      moveToNextPlayer();
+    }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
+  }, [players, currentPlayerIndex, currentBet, pot, communityCards, showdown, toast, moveToNextPlayer]);
+
+  // Check if round is complete and move to next phase
+  useEffect(() => {
+    if (gameState !== 'playing' || showdown) return;
+    
+    if (checkRoundComplete()) {
+      setTimeout(() => {
+        nextPhase();
+      }, 1500);
+    } else if (players[currentPlayerIndex]?.isBot && !players[currentPlayerIndex]?.isFolded) {
+      executeBotAction();
+    }
+  }, [currentPlayerIndex, players, gameState, showdown, checkRoundComplete]);
+
   const dealNewHand = useCallback(() => {
     console.log('Dealing new hand');
     const newDeck = createDeck();
@@ -90,8 +204,10 @@ export const usePokerGame = (config: GameConfig) => {
     const playersWithBlinds = [...updatedPlayers];
     playersWithBlinds[0].chips -= config.smallBlind;
     playersWithBlinds[0].currentBet = config.smallBlind;
-    playersWithBlinds[1].chips -= config.bigBlind;
-    playersWithBlinds[1].currentBet = config.bigBlind;
+    if (playersWithBlinds.length > 1) {
+      playersWithBlinds[1].chips -= config.bigBlind;
+      playersWithBlinds[1].currentBet = config.bigBlind;
+    }
     
     setPlayers(playersWithBlinds);
     setPot(config.smallBlind + config.bigBlind);
@@ -207,15 +323,8 @@ export const usePokerGame = (config: GameConfig) => {
     }
     
     setPlayers(updatedPlayers);
-    
-    // Move to next player
-    let nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
-    while (updatedPlayers[nextPlayerIndex].isFolded && updatedPlayers.filter(p => !p.isFolded).length > 1) {
-      nextPlayerIndex = (nextPlayerIndex + 1) % players.length;
-    }
-    
-    setCurrentPlayerIndex(nextPlayerIndex);
-  }, [players, currentPlayerIndex, currentBet, pot, showdown, toast]);
+    moveToNextPlayer();
+  }, [players, currentPlayerIndex, currentBet, pot, showdown, toast, moveToNextPlayer]);
 
   // Initialize players when config changes
   useEffect(() => {
