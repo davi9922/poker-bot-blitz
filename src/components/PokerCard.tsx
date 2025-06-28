@@ -23,29 +23,29 @@ const PokerCard = ({ card, faceDown = false }: PokerCardProps) => {
   };
 
   const getSuitColor = (suit: string) => {
-    return suit === 'hearts' || suit === 'diamonds' ? 'text-red-600' : 'text-black';
+    return suit === 'hearts' || suit === 'diamonds' ? 'text-red-500' : 'text-slate-800';
   };
 
   if (faceDown || !card) {
     return (
-      <UICard className="w-16 h-24 bg-gradient-to-br from-blue-800 to-blue-900 border-blue-700 flex items-center justify-center shadow-lg">
-        <div className="text-blue-300 text-xs font-bold transform rotate-45">POKER</div>
+      <UICard className="w-full h-full bg-gradient-to-br from-slate-600 to-slate-700 border-slate-500 flex items-center justify-center shadow-lg rounded-lg">
+        <div className="w-6 h-6 bg-slate-400 rounded-full opacity-50"></div>
       </UICard>
     );
   }
 
   return (
-    <UICard className="w-16 h-24 bg-white border-gray-300 flex flex-col items-center justify-between p-1 shadow-lg hover:shadow-xl transition-shadow">
-      <div className={`text-xs font-bold ${getSuitColor(card.suit)} self-start`}>
-        <div>{card.rank}</div>
-        <div>{getSuitSymbol(card.suit)}</div>
+    <UICard className="w-full h-full bg-white border-gray-200 flex flex-col items-center justify-between p-1 shadow-lg hover:shadow-xl transition-shadow rounded-lg">
+      <div className={`text-xs font-bold ${getSuitColor(card.suit)} self-start leading-none`}>
+        <div className="text-center">{card.rank}</div>
+        <div className="text-center text-[10px]">{getSuitSymbol(card.suit)}</div>
       </div>
-      <div className={`text-2xl ${getSuitColor(card.suit)}`}>
+      <div className={`text-lg ${getSuitColor(card.suit)}`}>
         {getSuitSymbol(card.suit)}
       </div>
-      <div className={`text-xs font-bold ${getSuitColor(card.suit)} self-end transform rotate-180`}>
-        <div>{card.rank}</div>
-        <div>{getSuitSymbol(card.suit)}</div>
+      <div className={`text-xs font-bold ${getSuitColor(card.suit)} self-end transform rotate-180 leading-none`}>
+        <div className="text-center">{card.rank}</div>
+        <div className="text-center text-[10px]">{getSuitSymbol(card.suit)}</div>
       </div>
     </UICard>
   );

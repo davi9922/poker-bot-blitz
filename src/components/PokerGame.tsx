@@ -6,48 +6,40 @@ import GameSettings, { GameConfig } from "./GameSettings";
 import ChipStack from "./ChipStack";
 import CasinoChip from "./CasinoChip";
 import { usePokerGame } from "@/hooks/usePokerGame";
-import { Coins, Bot, User, Crown, Settings, Volume2, VolumeX, Pause, Play, Trophy, Star } from "lucide-react";
+import { Coins, Bot, User, Crown, Settings, Volume2, VolumeX, Trophy, Star, Minus, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const PokerGame = () => {
   const [gameConfig, setGameConfig] = useState<GameConfig>({
-    playerCount: 2,
-    startingChips: 1000,
-    smallBlind: 5,
-    bigBlind: 10,
+    playerCount: 6,
+    startingChips: 10000,
+    smallBlind: 50,
+    bigBlind: 100,
     autoRaise: false,
     gameSpeed: 1.5,
-    playerNames: ['Tú', 'Bot']
+    playerNames: ['Tú', 'Alice', 'Bob', 'Charlie', 'Diana', 'Eve']
   });
 
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [gameStatsPanelOpen, setGameStatsPanelOpen] = useState(false);
-  const [quickBetAmounts] = useState([50, 100, 200, 500, 1000]);
+  const [betAmount, setBetAmount] = useState(gameConfig.bigBlind);
 
   const { toast } = useToast();
 
   const {
     gameState,
     players,
-    playerHand,
-    botHand,
     communityCards,
     currentBet,
-    playerChips,
-    botChips,
     pot,
     gamePhase,
     playerTurn,
     showdown,
-    winner,
     winners,
     currentPlayerIndex,
     playerAction,
     dealNewHand,
     resetGame
   } = usePokerGame(gameConfig);
-
-  const [betAmount, setBetAmount] = useState(gameConfig.bigBlind);
 
   const handleConfigChange = (newConfig: GameConfig) => {
     setGameConfig(newConfig);
@@ -58,404 +50,298 @@ const PokerGame = () => {
   const handleCall = () => playerAction('call');
   const handleRaise = () => playerAction('raise', betAmount);
   const handleFold = () => playerAction('fold');
-  const handleAllIn = () => playerAction('raise', playerChips);
+  const handleAllIn = () => playerAction('raise', players[0]?.chips || 0);
 
   const canCheck = currentBet === (players[0]?.currentBet || 0);
   const canCall = currentBet > (players[0]?.currentBet || 0);
-  const canRaise = playerChips >= betAmount;
-  const canAllIn = playerChips > 0;
+  const canRaise = (players[0]?.chips || 0) >= betAmount;
+  const canAllIn = (players[0]?.chips || 0) > 0;
 
-  // Calculate player positions around the table
+  // Calculate player positions around the table (oval shape)
   const getPlayerPosition = (index: number, total: number) => {
-    let angle;
     if (index === 0) {
-      angle = 180;
-    } else {
-      const botIndex = index - 1;
-      const totalBots = total - 1;
-      if (totalBots === 1) {
-        angle = 0;
-      } else {
-        const startAngle = 45;
-        const endAngle = 315;
-        const angleRange = endAngle - startAngle;
-        angle = startAngle + (botIndex * angleRange) / (totalBots - 1);
-      }
+      // Human player always at bottom
+      return { x: 50, y: 85, angle: 0 };
     }
     
-    const radius = 50;
-    const x = 50 + radius * Math.cos((angle - 90) * Math.PI / 180);
-    const y = 50 + radius * Math.sin((angle - 90) * Math.PI / 180);
+    const botIndex = index - 1;
+    const totalBots = total - 1;
+    let angle;
+    
+    if (totalBots === 1) {
+      angle = 180; // Top center
+    } else {
+      // Distribute bots around the top and sides
+      const angleStep = 180 / (totalBots - 1);
+      angle = 180 - (botIndex * angleStep);
+    }
+    
+    const radiusX = 42; // Horizontal radius
+    const radiusY = 28; // Vertical radius
+    const x = 50 + radiusX * Math.cos((angle - 90) * Math.PI / 180);
+    const y = 50 + radiusY * Math.sin((angle - 90) * Math.PI / 180);
+    
     return { x, y, angle };
   };
 
-  const quickBet = (amount: number) => {
-    setBetAmount(Math.min(amount, playerChips));
+  const getPlayerAvatar = (index: number) => {
+    const avatars = ['👤', '🧑‍💼', '👩‍💻', '🧑‍🎨', '👩‍🔬', '🧑‍🍳'];
+    return avatars[index] || '🤖';
+  };
+
+  const adjustBetAmount = (delta: number) => {
+    const newAmount = Math.max(gameConfig.bigBlind, Math.min(players[0]?.chips || 0, betAmount + delta));
+    setBetAmount(newAmount);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-      {/* Casino Background Elements */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-10 left-10 w-32 h-32 bg-yellow-400 rounded-full blur-3xl"></div>
-        <div className="absolute top-32 right-20 w-24 h-24 bg-red-500 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-20 left-32 w-40 h-40 bg-blue-500 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-32 right-16 w-28 h-28 bg-purple-500 rounded-full blur-2xl"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-20 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl"></div>
       </div>
 
-      {/* Top Casino Header */}
-      <div className="relative z-10 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 border-b-4 border-amber-600 shadow-2xl">
-        <div className="container mx-auto px-6 py-4">
+      {/* Top UI Bar */}
+      <div className="relative z-10 bg-slate-900/80 backdrop-blur-sm border-b border-slate-700">
+        <div className="container mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
-            {/* Casino Logo/Title */}
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
-                <Crown className="w-6 h-6 text-amber-900" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white tracking-wide">ROYAL POKER</h1>
-                <p className="text-amber-200 text-sm">Premium Casino Experience</p>
-              </div>
+              <div className="text-xl font-bold text-white">AION POKER</div>
+              <div className="text-slate-400 text-sm">Premium Experience</div>
             </div>
-
-            {/* Top Controls */}
-            <div className="flex items-center gap-4">
-              {/* Sound Toggle */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setSoundEnabled(!soundEnabled)}
-                className="text-white hover:bg-amber-700"
-              >
-                {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+            
+            <div className="flex items-center gap-2">
+              <div className="text-yellow-400 font-bold">Pot ${pot.toLocaleString()}</div>
+              <Button variant="ghost" size="sm" onClick={() => setSoundEnabled(!soundEnabled)}>
+                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
               </Button>
-
-              {/* Game Stats */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setGameStatsPanelOpen(!gameStatsPanelOpen)}
-                className="text-white hover:bg-amber-700"
-              >
-                <Trophy className="w-5 h-5 mr-2" />
-                Stats
-              </Button>
-
-              {/* Settings */}
-              <GameSettings 
-                config={gameConfig} 
-                onConfigChange={handleConfigChange} 
-                onResetGame={resetGame} 
-              />
+              <GameSettings config={gameConfig} onConfigChange={handleConfigChange} onResetGame={resetGame} />
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Game Area */}
-      <div className="relative z-10 max-w-7xl mx-auto p-8">
-        <div className="relative w-[1000px] h-[700px] mx-auto">
-          
-          {/* Enhanced Poker Table with casino lighting */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            {/* Table Shadow */}
-            <div className="absolute inset-0 bg-black/30 rounded-full blur-xl transform translate-y-4"></div>
+      <div className="relative z-10 p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="relative w-full h-[600px]">
             
-            <div className="w-[700px] h-[450px] bg-gradient-to-br from-amber-900 via-amber-800 to-amber-700 rounded-full border-8 border-amber-900 shadow-2xl relative">
-              {/* Table edge lighting */}
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-600/30 via-transparent to-amber-900/50 rounded-full"></div>
-              <div className="absolute inset-2 border-2 border-amber-600/50 rounded-full"></div>
-              
-              {/* Inner playing surface */}
-              <div className="absolute inset-6 bg-gradient-to-br from-green-700 via-green-800 to-green-900 rounded-full border-4 border-green-600 shadow-inner relative overflow-hidden">
-                {/* Felt pattern */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,197,94,0.1)_0%,transparent_50%)] rounded-full"></div>
-                <div className="absolute inset-0 bg-gradient-to-br from-green-600/10 to-green-900/30 rounded-full"></div>
-                
-                {/* Casino table pattern */}
-                <div className="absolute inset-0 opacity-5">
-                  <div className="absolute top-4 left-4 right-4 bottom-4 border border-green-400 rounded-full"></div>
-                  <div className="absolute top-8 left-8 right-8 bottom-8 border border-green-400 rounded-full"></div>
-                </div>
-                
-                {/* Central community cards area */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-28">
-                  <div className="w-full h-full bg-gradient-to-br from-green-600 to-green-700 rounded-xl border-2 border-green-500 shadow-inner relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-transparent rounded-xl"></div>
-                    <div className="absolute inset-2 border border-green-400/50 rounded-lg bg-green-600/30">
-                      <div className="flex items-center justify-center h-full gap-2">
-                        {communityCards.length > 0 ? (
-                          communityCards.map((card, index) => (
-                            <div key={index} className="transform hover:scale-105 transition-all duration-300 hover:rotate-2">
-                              <PokerCard card={card} />
-                            </div>
-                          ))
+            {/* Modern Poker Table */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div className="w-[800px] h-[400px] bg-gradient-to-br from-slate-700 via-slate-800 to-slate-700 rounded-full relative shadow-2xl border-4 border-slate-600">
+                {/* Table felt */}
+                <div className="absolute inset-4 bg-gradient-to-br from-emerald-800 via-emerald-900 to-emerald-800 rounded-full shadow-inner">
+                  
+                  {/* Community Cards Area */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex gap-2">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <div key={index} className="w-12 h-16 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
+                        {communityCards[index] ? (
+                          <PokerCard card={communityCards[index]} />
                         ) : (
-                          <div className="text-green-300 text-sm font-bold tracking-wider flex items-center gap-2">
-                            <Star className="w-4 h-4" />
-                            COMMUNITY CARDS
-                            <Star className="w-4 h-4" />
-                          </div>
+                          <div className="text-slate-500 text-xs">?</div>
                         )}
                       </div>
+                    ))}
+                  </div>
+
+                  {/* Pot indicator */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-16">
+                    <div className="bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-600">
+                      <div className="text-yellow-400 font-bold text-sm">Pot ${pot.toLocaleString()}</div>
                     </div>
                   </div>
-                </div>
 
-                {/* Enhanced Pot display */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-20">
-                  <div className="flex flex-col items-center gap-3">
-                    {pot > 0 && (
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-yellow-400/20 rounded-full blur-lg"></div>
-                        <ChipStack totalChips={pot} size="md" showTotal={false} />
+                  {/* Game Phase */}
+                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
+                    <div className="bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-600">
+                      <div className="text-blue-400 font-semibold text-xs uppercase">
+                        {gamePhase}
                       </div>
-                    )}
-                    <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white px-6 py-3 rounded-full shadow-xl border-2 border-amber-400 flex items-center gap-3 font-bold relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                      <Coins className="w-6 h-6 text-yellow-200 animate-pulse" />
-                      <span className="text-lg relative z-10">POT: ${pot.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-
-                {/* Game phase indicator */}
-                <div className="absolute top-4 right-4">
-                  <div className="bg-gradient-to-r from-purple-600 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg border border-purple-400 flex items-center gap-2">
-                    {gamePhase === 'preflop' && <>🃏 PRE-FLOP</>}
-                    {gamePhase === 'flop' && <>🎰 FLOP</>}
-                    {gamePhase === 'turn' && <>🎲 TURN</>}
-                    {gamePhase === 'river' && <>🌊 RIVER</>}
-                    {gamePhase === 'showdown' && <>👑 SHOWDOWN</>}
-                  </div>
-                </div>
-
-                {/* Turn indicator */}
-                {gameState === 'playing' && !showdown && (
-                  <div className="absolute top-4 left-4">
-                    <div className={`px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 ${
-                      playerTurn 
-                        ? 'bg-blue-600 text-white animate-pulse border-2 border-blue-400' 
-                        : 'bg-gray-600 text-white border-2 border-gray-500'
-                    }`}>
-                      {playerTurn ? (
-                        <>🎯 TU TURNO</>
-                      ) : (
-                        <>⏳ ESPERANDO...</>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
-          </div>
 
-          {/* Player positions around the table */}
-          {players.map((player, index) => {
-            const position = getPlayerPosition(index, players.length);
-            const isCurrentPlayer = currentPlayerIndex === index;
-            const isWinner = winners.includes(player.id);
-            const isHuman = index === 0;
-            
-            return (
-              <div
-                key={player.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                style={{
-                  left: `${position.x}%`,
-                  top: `${position.y}%`
-                }}
-              >
-                {/* Player info */}
-                <div className={`${isHuman ? 'mb-6' : 'mt-6'} text-center relative`}>
-                  {/* Player glow effect */}
-                  {isCurrentPlayer && (
-                    <div className="absolute inset-0 bg-yellow-400/20 rounded-full blur-xl animate-pulse"></div>
-                  )}
-                  
-                  <div className={`flex items-center justify-center gap-3 px-6 py-3 rounded-full shadow-xl border-2 relative z-10 ${
-                    isCurrentPlayer 
-                      ? 'bg-gradient-to-r from-yellow-500 to-yellow-400 text-black border-yellow-300 shadow-yellow-400/50' 
-                      : player.isBot 
-                      ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-500' 
-                      : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-500'
-                  }`}>
-                    {isWinner && <Crown className="w-5 h-5 text-yellow-300 animate-bounce" />}
-                    {player.isBot ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
-                    <span className="text-sm font-bold">{player.name}</span>
-                    {isCurrentPlayer && <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>}
-                  </div>
-                  
-                  {/* Player chip stack */}
-                  <div className="mt-3 flex flex-col items-center gap-2">
-                    <ChipStack totalChips={player.chips} size="sm" />
+            {/* Players around the table */}
+            {players.map((player, index) => {
+              const position = getPlayerPosition(index, players.length);
+              const isCurrentPlayer = currentPlayerIndex === index;
+              const isWinner = winners.includes(player.id);
+              const isHuman = index === 0;
+              
+              return (
+                <div
+                  key={player.id}
+                  className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                  style={{
+                    left: `${position.x}%`,
+                    top: `${position.y}%`
+                  }}
+                >
+                  {/* Player Avatar and Info */}
+                  <div className="flex flex-col items-center gap-2">
+                    {/* Avatar */}
+                    <div className={`relative w-16 h-16 rounded-full flex items-center justify-center text-2xl border-2 ${
+                      isCurrentPlayer 
+                        ? 'bg-blue-500 border-blue-400 shadow-lg shadow-blue-500/50' 
+                        : 'bg-slate-700 border-slate-600'
+                    }`}>
+                      {isWinner && <Crown className="absolute -top-2 -right-2 w-6 h-6 text-yellow-400" />}
+                      <span>{getPlayerAvatar(index)}</span>
+                      {isCurrentPlayer && (
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+                      )}
+                    </div>
+                    
+                    {/* Player Name and Chips */}
+                    <div className="text-center">
+                      <div className="text-white text-sm font-semibold">{player.name}</div>
+                      <div className="text-slate-400 text-xs">${player.chips.toLocaleString()}</div>
+                    </div>
+                    
+                    {/* Current Bet */}
                     {player.currentBet > 0 && (
-                      <div className="flex items-center gap-2 bg-black/60 px-3 py-1 rounded-full border border-green-400">
-                        <span className="text-xs text-green-200 font-semibold">Apostó:</span>
-                        <CasinoChip value={player.currentBet} size="sm" />
+                      <div className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                        ${player.currentBet.toLocaleString()}
                       </div>
                     )}
                   </div>
-                </div>
-                
-                {/* Player cards */}
-                <div className="flex gap-2 justify-center">
-                  {player.hand.map((card, cardIndex) => (
-                    <div key={cardIndex} className="transform hover:scale-105 transition-all duration-300 hover:-translate-y-2">
-                      <PokerCard 
-                        card={showdown || !player.isBot ? card : null} 
-                        faceDown={!showdown && player.isBot} 
-                      />
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Folded indicator */}
-                {player.isFolded && (
-                  <div className="absolute inset-0 bg-red-900/80 rounded-lg flex items-center justify-center backdrop-blur-sm border-2 border-red-600">
-                    <span className="text-red-300 font-bold text-lg shadow-lg">FOLD</span>
+                  
+                  {/* Player Cards */}
+                  <div className={`flex gap-1 mt-2 justify-center ${isHuman ? 'mt-4' : ''}`}>
+                    {player.hand.map((card, cardIndex) => (
+                      <div key={cardIndex} className="w-8 h-12">
+                        <PokerCard 
+                          card={showdown || !player.isBot ? card : null} 
+                          faceDown={!showdown && player.isBot} 
+                        />
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-            );
-          })}
+                  
+                  {/* Folded overlay */}
+                  {player.isFolded && (
+                    <div className="absolute inset-0 bg-red-900/80 rounded-lg flex items-center justify-center">
+                      <span className="text-red-300 font-bold text-sm">FOLD</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
-          {/* Enhanced Control Panel */}
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full">
-            {/* Game result */}
+            {/* Game Result */}
             {winners.length > 0 && (
-              <div className="text-center mb-6">
-                <div className={`inline-block text-3xl font-bold p-6 rounded-2xl shadow-2xl border-4 ${
-                  winners.includes(0) ? 'bg-gradient-to-r from-green-600 to-green-500 text-white border-green-400' : 'bg-gradient-to-r from-red-600 to-red-500 text-white border-red-400'
+              <div className="absolute top-8 left-1/2 transform -translate-x-1/2">
+                <div className={`text-2xl font-bold p-4 rounded-xl shadow-lg ${
+                  winners.includes(0) ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
                 }`}>
                   {winners.includes(0) ? '🎉 ¡VICTORIA!' : '💀 DERROTA'}
-                  {winners.length > 1 && ' (EMPATE)'}
                 </div>
               </div>
             )}
+          </div>
 
-            {/* Action buttons panel */}
+          {/* Bottom Control Panel */}
+          <div className="mt-8">
             {gameState === 'playing' && playerTurn && !showdown && (
-              <div className="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 rounded-2xl p-6 mb-6 border-2 border-slate-600 shadow-2xl">
-                {/* Quick bet amounts */}
-                <div className="mb-4">
-                  <div className="text-white text-sm font-semibold mb-2 text-center">APUESTAS RÁPIDAS</div>
-                  <div className="flex justify-center gap-2">
-                    {quickBetAmounts.map(amount => (
-                      <Button
-                        key={amount}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => quickBet(amount)}
-                        disabled={amount > playerChips}
-                        className="bg-amber-600 text-white border-amber-500 hover:bg-amber-500 disabled:opacity-50"
-                      >
-                        ${amount}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
+              <div className="bg-slate-900/90 backdrop-blur-sm rounded-2xl p-6 border border-slate-700">
+                <div className="flex items-center justify-center gap-4">
+                  
+                  {/* Fold Button */}
+                  <Button 
+                    onClick={handleFold} 
+                    className="bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-full font-bold"
+                  >
+                    FOLD
+                  </Button>
 
-                {/* Main action buttons */}
-                <div className="flex flex-wrap justify-center gap-4">
-                  {canCheck && (
+                  {/* Check/Call Button */}
+                  {canCheck ? (
                     <Button 
                       onClick={handleCheck} 
-                      variant="outline" 
-                      size="lg"
-                      className="bg-green-600 text-white border-green-500 hover:bg-green-500 shadow-lg min-w-[100px]"
+                      className="bg-gray-600 hover:bg-gray-500 text-white px-8 py-3 rounded-full font-bold"
                     >
-                      ✅ Check
+                      CHECK
                     </Button>
-                  )}
-                  {canCall && (
+                  ) : canCall ? (
                     <Button 
                       onClick={handleCall} 
-                      size="lg"
-                      className="bg-blue-600 hover:bg-blue-500 shadow-lg min-w-[120px]"
+                      className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-full font-bold"
                     >
-                      📞 Call ${currentBet - (players[0]?.currentBet || 0)}
+                      CALL ${(currentBet - (players[0]?.currentBet || 0)).toLocaleString()}
                     </Button>
-                  )}
-                  
-                  {/* Bet/Raise controls */}
-                  <div className="flex items-center gap-3 bg-slate-900 rounded-lg p-3 shadow-lg border border-slate-600">
-                    <input
-                      type="range"
-                      min={gameConfig.bigBlind}
-                      max={playerChips}
-                      value={betAmount}
-                      onChange={(e) => setBetAmount(parseInt(e.target.value))}
-                      className="w-32"
-                    />
-                    <input
-                      type="number"
-                      value={betAmount}
-                      onChange={(e) => setBetAmount(Math.max(gameConfig.bigBlind, parseInt(e.target.value) || gameConfig.bigBlind))}
-                      min={gameConfig.bigBlind}
-                      max={playerChips}
-                      className="w-20 px-2 py-1 rounded border text-center font-semibold bg-white text-black"
-                    />
-                    <Button 
-                      onClick={handleRaise} 
-                      disabled={!canRaise} 
-                      size="lg"
-                      className="bg-red-600 hover:bg-red-500 shadow-lg min-w-[100px]"
+                  ) : null}
+
+                  {/* Bet Controls */}
+                  <div className="flex items-center gap-2 bg-slate-800 rounded-full p-2">
+                    <Button
+                      onClick={() => adjustBetAmount(-gameConfig.bigBlind)}
+                      disabled={betAmount <= gameConfig.bigBlind}
+                      variant="ghost"
+                      size="sm"
+                      className="text-white hover:bg-slate-700"
                     >
-                      🚀 Raise
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                    
+                    <div className="text-white font-bold px-4">
+                      ${betAmount.toLocaleString()}
+                    </div>
+                    
+                    <Button
+                      onClick={() => adjustBetAmount(gameConfig.bigBlind)}
+                      disabled={betAmount >= (players[0]?.chips || 0)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-white hover:bg-slate-700"
+                    >
+                      <Plus className="w-4 h-4" />
                     </Button>
                   </div>
 
+                  {/* Raise Button */}
+                  <Button 
+                    onClick={handleRaise} 
+                    disabled={!canRaise}
+                    className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-full font-bold"
+                  >
+                    RAISE
+                  </Button>
+
+                  {/* All In Button */}
                   {canAllIn && (
                     <Button 
                       onClick={handleAllIn} 
-                      size="lg"
-                      className="bg-purple-600 hover:bg-purple-500 shadow-lg min-w-[100px] font-bold"
+                      className="bg-purple-600 hover:bg-purple-500 text-white px-8 py-3 rounded-full font-bold"
                     >
-                      💎 ALL IN
+                      ALL IN
                     </Button>
                   )}
-                  
-                  <Button 
-                    onClick={handleFold} 
-                    variant="destructive" 
-                    size="lg"
-                    className="shadow-lg min-w-[100px]"
-                  >
-                    💔 Fold
-                  </Button>
                 </div>
               </div>
             )}
 
-            {/* Game control buttons */}
-            <div className="flex justify-center gap-4 pb-8">
+            {/* Game Control Buttons */}
+            <div className="flex justify-center gap-4 mt-4">
               {gameState === 'waiting' && (
                 <Button 
                   onClick={dealNewHand} 
-                  size="lg" 
-                  className="bg-green-600 hover:bg-green-500 shadow-lg px-8 py-4 text-lg"
+                  className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-full font-bold"
                 >
-                  🎯 Repartir Cartas
+                  🎯 DEAL CARDS
                 </Button>
               )}
               {(gameState === 'finished' || showdown) && (
                 <Button 
                   onClick={dealNewHand} 
-                  size="lg" 
-                  className="bg-green-600 hover:bg-green-500 shadow-lg px-8 py-4 text-lg"
+                  className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-full font-bold"
                 >
-                  🔄 Nueva Mano
+                  🔄 NEXT HAND
                 </Button>
               )}
-              <Button 
-                onClick={resetGame} 
-                variant="outline" 
-                size="lg" 
-                className="border-white text-white hover:bg-white hover:text-slate-800 shadow-lg px-8 py-4"
-              >
-                🎮 Reiniciar Juego
-              </Button>
             </div>
           </div>
         </div>
