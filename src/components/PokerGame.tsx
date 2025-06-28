@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import PokerCard from "./PokerCard";
@@ -136,7 +135,7 @@ const PokerGame = () => {
                   {/* Community Cards Area */}
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex gap-2">
                     {Array.from({ length: 5 }).map((_, index) => (
-                      <div key={index} className="w-12 h-16 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
+                      <div key={index} className="w-16 h-22 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
                         {communityCards[index] ? (
                           <PokerCard card={communityCards[index]} />
                         ) : (
@@ -213,7 +212,7 @@ const PokerGame = () => {
                   {/* Player Cards */}
                   <div className={`flex gap-1 mt-2 justify-center ${isHuman ? 'mt-4' : ''}`}>
                     {player.hand.map((card, cardIndex) => (
-                      <div key={cardIndex} className="w-8 h-12">
+                      <div key={cardIndex} className="w-12 h-16">
                         <PokerCard 
                           card={showdown || !player.isBot ? card : null} 
                           faceDown={!showdown && player.isBot} 
