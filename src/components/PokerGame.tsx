@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import PokerCard from "./PokerCard";
@@ -21,6 +22,7 @@ const PokerGame = () => {
 
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [betAmount, setBetAmount] = useState(gameConfig.bigBlind);
+  const [animatingBets, setAnimatingBets] = useState<{[key: number]: boolean}>({});
 
   const { toast } = useToast();
 
@@ -46,10 +48,22 @@ const PokerGame = () => {
   };
 
   const handleCheck = () => playerAction('check');
-  const handleCall = () => playerAction('call');
-  const handleRaise = () => playerAction('raise', betAmount);
+  const handleCall = () => {
+    setAnimatingBets({...animatingBets, 0: true});
+    setTimeout(() => setAnimatingBets({...animatingBets, 0: false}), 1000);
+    playerAction('call');
+  };
+  const handleRaise = () => {
+    setAnimatingBets({...animatingBets, 0: true});
+    setTimeout(() => setAnimatingBets({...animatingBets, 0: false}), 1000);
+    playerAction('raise', betAmount);
+  };
   const handleFold = () => playerAction('fold');
-  const handleAllIn = () => playerAction('raise', players[0]?.chips || 0);
+  const handleAllIn = () => {
+    setAnimatingBets({...animatingBets, 0: true});
+    setTimeout(() => setAnimatingBets({...animatingBets, 0: false}), 1000);
+    playerAction('raise', players[0]?.chips || 0);
+  };
 
   const canCheck = currentBet === (players[0]?.currentBet || 0);
   const canCall = currentBet > (players[0]?.currentBet || 0);
@@ -70,36 +84,36 @@ const PokerGame = () => {
     const positions = [];
     
     if (totalBots === 1) {
-      positions.push({ x: 50, y: 20, angle: 180 }); // Top center
+      positions.push({ x: 50, y: 15, angle: 180 }); // Top center
     } else if (totalBots === 2) {
       positions.push(
-        { x: 25, y: 30, angle: 135 }, // Top left
-        { x: 75, y: 30, angle: 45 }   // Top right
+        { x: 20, y: 25, angle: 135 }, // Top left
+        { x: 80, y: 25, angle: 45 }   // Top right
       );
     } else if (totalBots === 3) {
       positions.push(
-        { x: 50, y: 15, angle: 180 }, // Top center
-        { x: 20, y: 40, angle: 135 }, // Left
-        { x: 80, y: 40, angle: 45 }   // Right
+        { x: 50, y: 10, angle: 180 }, // Top center
+        { x: 15, y: 35, angle: 135 }, // Left
+        { x: 85, y: 35, angle: 45 }   // Right
       );
     } else if (totalBots === 4) {
       positions.push(
-        { x: 35, y: 20, angle: 160 }, // Top left
-        { x: 65, y: 20, angle: 20 },  // Top right
-        { x: 15, y: 50, angle: 120 }, // Mid left
-        { x: 85, y: 50, angle: 60 }   // Mid right
+        { x: 30, y: 15, angle: 160 }, // Top left
+        { x: 70, y: 15, angle: 20 },  // Top right
+        { x: 10, y: 45, angle: 120 }, // Mid left
+        { x: 90, y: 45, angle: 60 }   // Mid right
       );
     } else if (totalBots === 5) {
       positions.push(
-        { x: 50, y: 15, angle: 180 }, // Top center
-        { x: 25, y: 25, angle: 135 }, // Top left
-        { x: 75, y: 25, angle: 45 },  // Top right
-        { x: 15, y: 55, angle: 120 }, // Mid left
-        { x: 85, y: 55, angle: 60 }   // Mid right
+        { x: 50, y: 10, angle: 180 }, // Top center
+        { x: 25, y: 20, angle: 135 }, // Top left
+        { x: 75, y: 20, angle: 45 },  // Top right
+        { x: 12, y: 50, angle: 120 }, // Mid left
+        { x: 88, y: 50, angle: 60 }   // Mid right
       );
     }
     
-    return positions[botIndex] || { x: 50, y: 20, angle: 180 };
+    return positions[botIndex] || { x: 50, y: 15, angle: 180 };
   };
 
   const getPlayerAvatar = (index: number) => {
@@ -110,6 +124,25 @@ const PokerGame = () => {
   const adjustBetAmount = (delta: number) => {
     const newAmount = Math.max(gameConfig.bigBlind, Math.min(players[0]?.chips || 0, betAmount + delta));
     setBetAmount(newAmount);
+  };
+
+  // Get pot chip representation
+  const getPotChips = () => {
+    if (pot === 0) return [];
+    const chipValues = [1000, 500, 100, 50, 25, 10, 5];
+    const chips = [];
+    let remaining = pot;
+    
+    for (const value of chipValues) {
+      const count = Math.floor(remaining / value);
+      if (count > 0) {
+        chips.push({ value, count: Math.min(count, 8) }); // Max 8 chips per stack
+        remaining -= count * value;
+      }
+      if (chips.length >= 6) break; // Max 6 different chip types
+    }
+    
+    return chips;
   };
 
   return (
@@ -151,7 +184,7 @@ const PokerGame = () => {
                 {/* Table felt */}
                 <div className="absolute inset-4 bg-gradient-to-br from-emerald-800 via-emerald-900 to-emerald-800 rounded-full shadow-inner">
                   
-                  {/* Community Cards Area - Made larger */}
+                  {/* Community Cards Area */}
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex gap-3">
                     {Array.from({ length: 5 }).map((_, index) => (
                       <div key={index} className="w-20 h-28 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
@@ -164,9 +197,30 @@ const PokerGame = () => {
                     ))}
                   </div>
 
-                  {/* Pot indicator */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-20">
-                    <div className="bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-600">
+                  {/* Pot Chips - Center of table */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-24">
+                    <div className="flex items-center justify-center gap-1">
+                      {getPotChips().map((chip, index) => (
+                        <div key={chip.value} className="relative animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                          <div className="flex flex-col items-center">
+                            {/* Stack of chips */}
+                            {Array.from({ length: Math.min(chip.count, 5) }).map((_, stackIndex) => (
+                              <div 
+                                key={stackIndex}
+                                className="absolute"
+                                style={{ 
+                                  top: `-${stackIndex * 2}px`,
+                                  zIndex: stackIndex + 1
+                                }}
+                              >
+                                <CasinoChip value={chip.value} size="sm" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-600 mt-8">
                       <div className="text-yellow-400 font-bold text-sm">Pot ${pot.toLocaleString()}</div>
                     </div>
                   </div>
@@ -217,13 +271,25 @@ const PokerGame = () => {
                     {/* Player Name and Chips */}
                     <div className="text-center">
                       <div className="text-white text-sm font-semibold">{player.name}</div>
-                      <div className="text-slate-400 text-xs">${player.chips.toLocaleString()}</div>
+                      {/* Player Chip Stack */}
+                      <div className="mt-1">
+                        <ChipStack totalChips={player.chips} size="sm" showTotal={false} />
+                      </div>
+                      <div className="text-slate-400 text-xs mt-1">${player.chips.toLocaleString()}</div>
                     </div>
                     
-                    {/* Current Bet */}
+                    {/* Current Bet with chips */}
                     {player.currentBet > 0 && (
-                      <div className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
-                        ${player.currentBet.toLocaleString()}
+                      <div className={`relative ${animatingBets[index] ? 'animate-pulse' : ''}`}>
+                        <div className="flex gap-1 mb-1">
+                          {/* Show bet as chips */}
+                          {player.currentBet >= 100 && <CasinoChip value={100} size="sm" />}
+                          {player.currentBet >= 50 && player.currentBet % 100 >= 50 && <CasinoChip value={50} size="sm" />}
+                          {player.currentBet >= 25 && player.currentBet % 50 >= 25 && <CasinoChip value={25} size="sm" />}
+                        </div>
+                        <div className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                          ${player.currentBet.toLocaleString()}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -231,7 +297,7 @@ const PokerGame = () => {
                   {/* Player Cards */}
                   <div className={`flex gap-1 mt-2 justify-center ${isHuman ? 'mt-4' : ''}`}>
                     {player.hand.map((card, cardIndex) => (
-                      <div key={cardIndex} className="w-12 h-16">
+                      <div key={cardIndex} className="w-14 h-20">
                         <PokerCard 
                           card={showdown || !player.isBot ? card : null} 
                           faceDown={!showdown && player.isBot} 
