@@ -59,28 +59,47 @@ const PokerGame = () => {
   // Calculate player positions around the table (oval shape)
   const getPlayerPosition = (index: number, total: number) => {
     if (index === 0) {
-      // Human player always at bottom
+      // Human player always at bottom center
       return { x: 50, y: 85, angle: 0 };
     }
     
     const botIndex = index - 1;
     const totalBots = total - 1;
-    let angle;
+    
+    // Distribute bots more evenly around the table, avoiding bottom area
+    const positions = [];
     
     if (totalBots === 1) {
-      angle = 180; // Top center
-    } else {
-      // Distribute bots around the top and sides
-      const angleStep = 180 / (totalBots - 1);
-      angle = 180 - (botIndex * angleStep);
+      positions.push({ x: 50, y: 20, angle: 180 }); // Top center
+    } else if (totalBots === 2) {
+      positions.push(
+        { x: 25, y: 30, angle: 135 }, // Top left
+        { x: 75, y: 30, angle: 45 }   // Top right
+      );
+    } else if (totalBots === 3) {
+      positions.push(
+        { x: 50, y: 15, angle: 180 }, // Top center
+        { x: 20, y: 40, angle: 135 }, // Left
+        { x: 80, y: 40, angle: 45 }   // Right
+      );
+    } else if (totalBots === 4) {
+      positions.push(
+        { x: 35, y: 20, angle: 160 }, // Top left
+        { x: 65, y: 20, angle: 20 },  // Top right
+        { x: 15, y: 50, angle: 120 }, // Mid left
+        { x: 85, y: 50, angle: 60 }   // Mid right
+      );
+    } else if (totalBots === 5) {
+      positions.push(
+        { x: 50, y: 15, angle: 180 }, // Top center
+        { x: 25, y: 25, angle: 135 }, // Top left
+        { x: 75, y: 25, angle: 45 },  // Top right
+        { x: 15, y: 55, angle: 120 }, // Mid left
+        { x: 85, y: 55, angle: 60 }   // Mid right
+      );
     }
     
-    const radiusX = 42; // Horizontal radius
-    const radiusY = 28; // Vertical radius
-    const x = 50 + radiusX * Math.cos((angle - 90) * Math.PI / 180);
-    const y = 50 + radiusY * Math.sin((angle - 90) * Math.PI / 180);
-    
-    return { x, y, angle };
+    return positions[botIndex] || { x: 50, y: 20, angle: 180 };
   };
 
   const getPlayerAvatar = (index: number) => {
@@ -132,21 +151,21 @@ const PokerGame = () => {
                 {/* Table felt */}
                 <div className="absolute inset-4 bg-gradient-to-br from-emerald-800 via-emerald-900 to-emerald-800 rounded-full shadow-inner">
                   
-                  {/* Community Cards Area */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex gap-2">
+                  {/* Community Cards Area - Made larger */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex gap-3">
                     {Array.from({ length: 5 }).map((_, index) => (
-                      <div key={index} className="w-16 h-22 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
+                      <div key={index} className="w-20 h-28 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
                         {communityCards[index] ? (
                           <PokerCard card={communityCards[index]} />
                         ) : (
-                          <div className="text-slate-500 text-xs">?</div>
+                          <div className="text-slate-500 text-sm">?</div>
                         )}
                       </div>
                     ))}
                   </div>
 
                   {/* Pot indicator */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-16">
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-20">
                     <div className="bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-600">
                       <div className="text-yellow-400 font-bold text-sm">Pot ${pot.toLocaleString()}</div>
                     </div>
