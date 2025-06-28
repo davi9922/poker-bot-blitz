@@ -197,34 +197,6 @@ const PokerGame = () => {
                     ))}
                   </div>
 
-                  {/* Pot Chips - Center of table */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-24">
-                    <div className="flex items-center justify-center gap-1">
-                      {getPotChips().map((chip, index) => (
-                        <div key={chip.value} className="relative animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                          <div className="flex flex-col items-center">
-                            {/* Stack of chips */}
-                            {Array.from({ length: Math.min(chip.count, 5) }).map((_, stackIndex) => (
-                              <div 
-                                key={stackIndex}
-                                className="absolute"
-                                style={{ 
-                                  top: `-${stackIndex * 2}px`,
-                                  zIndex: stackIndex + 1
-                                }}
-                              >
-                                <CasinoChip value={chip.value} size="sm" />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-600 mt-8">
-                      <div className="text-yellow-400 font-bold text-sm">Pot ${pot.toLocaleString()}</div>
-                    </div>
-                  </div>
-
                   {/* Game Phase */}
                   <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
                     <div className="bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-600">
@@ -233,9 +205,43 @@ const PokerGame = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Pot Display - moved to bottom of table */}
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                    <div className="bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-600">
+                      <div className="text-yellow-400 font-bold text-sm">Pot ${pot.toLocaleString()}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Central Pot Chips - positioned outside the table */}
+            {pot > 0 && (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-16">
+                <div className="flex items-center justify-center gap-1">
+                  {getPotChips().map((chip, index) => (
+                    <div key={chip.value} className="relative animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                      <div className="flex flex-col items-center">
+                        {/* Stack of chips */}
+                        {Array.from({ length: Math.min(chip.count, 5) }).map((_, stackIndex) => (
+                          <div 
+                            key={stackIndex}
+                            className="absolute"
+                            style={{ 
+                              top: `-${stackIndex * 2}px`,
+                              zIndex: stackIndex + 1
+                            }}
+                          >
+                            <CasinoChip value={chip.value} size="sm" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Players around the table */}
             {players.map((player, index) => {
@@ -277,27 +283,27 @@ const PokerGame = () => {
                       </div>
                       <div className="text-slate-400 text-xs mt-1">${player.chips.toLocaleString()}</div>
                     </div>
-                    
-                    {/* Current Bet with chips */}
-                    {player.currentBet > 0 && (
-                      <div className={`relative ${animatingBets[index] ? 'animate-pulse' : ''}`}>
-                        <div className="flex gap-1 mb-1">
-                          {/* Show bet as chips */}
-                          {player.currentBet >= 100 && <CasinoChip value={100} size="sm" />}
-                          {player.currentBet >= 50 && player.currentBet % 100 >= 50 && <CasinoChip value={50} size="sm" />}
-                          {player.currentBet >= 25 && player.currentBet % 50 >= 25 && <CasinoChip value={25} size="sm" />}
-                        </div>
-                        <div className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
-                          ${player.currentBet.toLocaleString()}
-                        </div>
-                      </div>
-                    )}
                   </div>
+                  
+                  {/* Current Bet - positioned to the side of player */}
+                  {player.currentBet > 0 && (
+                    <div className={`absolute ${isHuman ? '-top-16' : 'top-20'} left-1/2 transform -translate-x-1/2 ${animatingBets[index] ? 'animate-pulse' : ''}`}>
+                      <div className="flex gap-1 mb-1 justify-center">
+                        {/* Show bet as chips */}
+                        {player.currentBet >= 100 && <CasinoChip value={100} size="sm" />}
+                        {player.currentBet >= 50 && player.currentBet % 100 >= 50 && <CasinoChip value={50} size="sm" />}
+                        {player.currentBet >= 25 && player.currentBet % 50 >= 25 && <CasinoChip value={25} size="sm" />}
+                      </div>
+                      <div className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                        ${player.currentBet.toLocaleString()}
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Player Cards */}
                   <div className={`flex gap-1 mt-2 justify-center ${isHuman ? 'mt-4' : ''}`}>
                     {player.hand.map((card, cardIndex) => (
-                      <div key={cardIndex} className="w-14 h-20">
+                      <div key={cardIndex} className="w-12 h-16">
                         <PokerCard 
                           card={showdown || !player.isBot ? card : null} 
                           faceDown={!showdown && player.isBot} 
