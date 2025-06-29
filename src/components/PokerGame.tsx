@@ -69,11 +69,11 @@ const PokerGame = () => {
   const canRaise = (players[0]?.chips || 0) >= betAmount;
   const canAllIn = (players[0]?.chips || 0) > 0;
 
-  // Calculate player positions outside the table
+  // Calculate player positions much further outside the table
   const getPlayerPosition = (index: number, total: number) => {
     if (index === 0) {
-      // Human player at bottom, further from table
-      return { x: 50, y: 95, angle: 0 };
+      // Human player at bottom, much further from table
+      return { x: 50, y: 98, angle: 0 };
     }
     
     const botIndex = index - 1;
@@ -82,43 +82,43 @@ const PokerGame = () => {
     const positions = [];
     
     if (totalBots === 1) {
-      positions.push({ x: 50, y: 5, angle: 180 }); // Top, further out
+      positions.push({ x: 50, y: 2, angle: 180 }); // Top, much further out
     } else if (totalBots === 2) {
       positions.push(
-        { x: 15, y: 15, angle: 135 }, // Top left, further out
-        { x: 85, y: 15, angle: 45 }   // Top right, further out
+        { x: 10, y: 10, angle: 135 }, // Top left, much further out
+        { x: 90, y: 10, angle: 45 }   // Top right, much further out
       );
     } else if (totalBots === 3) {
       positions.push(
-        { x: 50, y: 3, angle: 180 },  // Top center, further out
-        { x: 8, y: 25, angle: 135 }, // Left, further out
-        { x: 92, y: 25, angle: 45 }   // Right, further out
+        { x: 50, y: 2, angle: 180 },  // Top center, much further out
+        { x: 5, y: 20, angle: 135 }, // Left, much further out
+        { x: 95, y: 20, angle: 45 }   // Right, much further out
       );
     } else if (totalBots === 4) {
       positions.push(
-        { x: 25, y: 8, angle: 160 }, // Top left, further out
-        { x: 75, y: 8, angle: 20 },  // Top right, further out
-        { x: 5, y: 30, angle: 120 },  // Mid left, further out
-        { x: 95, y: 30, angle: 60 }   // Mid right, further out
+        { x: 20, y: 5, angle: 160 }, // Top left, much further out
+        { x: 80, y: 5, angle: 20 },  // Top right, much further out
+        { x: 2, y: 25, angle: 120 },  // Mid left, much further out
+        { x: 98, y: 25, angle: 60 }   // Mid right, much further out
       );
     } else if (totalBots === 5) {
       positions.push(
-        { x: 50, y: 3, angle: 180 },  // Top center, further out
-        { x: 20, y: 10, angle: 135 }, // Top left, further out
-        { x: 80, y: 10, angle: 45 },  // Top right, further out
-        { x: 5, y: 35, angle: 120 }, // Mid left, further out
-        { x: 95, y: 35, angle: 60 }   // Mid right, further out
+        { x: 50, y: 2, angle: 180 },  // Top center, much further out
+        { x: 15, y: 6, angle: 135 }, // Top left, much further out
+        { x: 85, y: 6, angle: 45 },  // Top right, much further out
+        { x: 2, y: 30, angle: 120 }, // Mid left, much further out
+        { x: 98, y: 30, angle: 60 }   // Mid right, much further out
       );
     }
     
-    return positions[botIndex] || { x: 50, y: 5, angle: 180 };
+    return positions[botIndex] || { x: 50, y: 2, angle: 180 };
   };
 
-  // Get card position outside the table but with proper spacing from player names
+  // Get card position with more space from player names
   const getCardPosition = (index: number, total: number) => {
     if (index === 0) {
-      // Human player cards - leave space above chips
-      return { x: 50, y: 85, angle: 0 };
+      // Human player cards - much more space above chips
+      return { x: 50, y: 82, angle: 0 };
     }
     
     const botIndex = index - 1;
@@ -127,43 +127,43 @@ const PokerGame = () => {
     const positions = [];
     
     if (totalBots === 1) {
-      positions.push({ x: 50, y: 15, angle: 180 });
+      positions.push({ x: 50, y: 18, angle: 180 });
     } else if (totalBots === 2) {
       positions.push(
-        { x: 15, y: 25, angle: 135 },
-        { x: 85, y: 25, angle: 45 }
+        { x: 10, y: 30, angle: 135 },
+        { x: 90, y: 30, angle: 45 }
       );
     } else if (totalBots === 3) {
       positions.push(
-        { x: 50, y: 13, angle: 180 },
-        { x: 8, y: 35, angle: 135 },
-        { x: 92, y: 35, angle: 45 }
+        { x: 50, y: 18, angle: 180 },
+        { x: 5, y: 40, angle: 135 },
+        { x: 95, y: 40, angle: 45 }
       );
     } else if (totalBots === 4) {
       positions.push(
-        { x: 25, y: 18, angle: 160 },
-        { x: 75, y: 18, angle: 20 },
-        { x: 5, y: 40, angle: 120 },
-        { x: 95, y: 40, angle: 60 }
+        { x: 20, y: 25, angle: 160 },
+        { x: 80, y: 25, angle: 20 },
+        { x: 2, y: 45, angle: 120 },
+        { x: 98, y: 45, angle: 60 }
       );
     } else if (totalBots === 5) {
       positions.push(
-        { x: 50, y: 13, angle: 180 },
-        { x: 20, y: 20, angle: 135 },
-        { x: 80, y: 20, angle: 45 },
-        { x: 5, y: 45, angle: 120 },
-        { x: 95, y: 45, angle: 60 }
+        { x: 50, y: 18, angle: 180 },
+        { x: 15, y: 26, angle: 135 },
+        { x: 85, y: 26, angle: 45 },
+        { x: 2, y: 50, angle: 120 },
+        { x: 98, y: 50, angle: 60 }
       );
     }
     
-    return positions[botIndex] || { x: 50, y: 15, angle: 180 };
+    return positions[botIndex] || { x: 50, y: 18, angle: 180 };
   };
 
-  // Get chip position between card and table with proper spacing
+  // Get chip position between player name and cards with more spacing
   const getChipPosition = (index: number, total: number) => {
     if (index === 0) {
-      // Human player chips - between player name and cards
-      return { x: 50, y: 90, angle: 0 };
+      // Human player chips - between player name and cards with more space
+      return { x: 50, y: 88, angle: 0 };
     }
     
     const botIndex = index - 1;
@@ -172,36 +172,36 @@ const PokerGame = () => {
     const positions = [];
     
     if (totalBots === 1) {
-      positions.push({ x: 50, y: 10, angle: 180 });
+      positions.push({ x: 50, y: 12, angle: 180 });
     } else if (totalBots === 2) {
       positions.push(
-        { x: 15, y: 20, angle: 135 },
-        { x: 85, y: 20, angle: 45 }
+        { x: 10, y: 22, angle: 135 },
+        { x: 90, y: 22, angle: 45 }
       );
     } else if (totalBots === 3) {
       positions.push(
-        { x: 50, y: 8, angle: 180 },
-        { x: 8, y: 30, angle: 135 },
-        { x: 92, y: 30, angle: 45 }
+        { x: 50, y: 12, angle: 180 },
+        { x: 5, y: 32, angle: 135 },
+        { x: 95, y: 32, angle: 45 }
       );
     } else if (totalBots === 4) {
       positions.push(
-        { x: 25, y: 13, angle: 160 },
-        { x: 75, y: 13, angle: 20 },
-        { x: 5, y: 35, angle: 120 },
-        { x: 95, y: 35, angle: 60 }
+        { x: 20, y: 17, angle: 160 },
+        { x: 80, y: 17, angle: 20 },
+        { x: 2, y: 37, angle: 120 },
+        { x: 98, y: 37, angle: 60 }
       );
     } else if (totalBots === 5) {
       positions.push(
-        { x: 50, y: 8, angle: 180 },
-        { x: 20, y: 15, angle: 135 },
-        { x: 80, y: 15, angle: 45 },
-        { x: 5, y: 40, angle: 120 },
-        { x: 95, y: 40, angle: 60 }
+        { x: 50, y: 12, angle: 180 },
+        { x: 15, y: 18, angle: 135 },
+        { x: 85, y: 18, angle: 45 },
+        { x: 2, y: 42, angle: 120 },
+        { x: 98, y: 42, angle: 60 }
       );
     }
     
-    return positions[botIndex] || { x: 50, y: 10, angle: 180 };
+    return positions[botIndex] || { x: 50, y: 12, angle: 180 };
   };
 
   const getPlayerAvatar = (index: number) => {
@@ -330,7 +330,7 @@ const PokerGame = () => {
               </div>
             )}
 
-            {/* Players around the table - now outside with proper spacing */}
+            {/* Players around the table - now much further outside with proper spacing */}
             {players.map((player, index) => {
               const playerPosition = getPlayerPosition(index, players.length);
               const cardPosition = getCardPosition(index, players.length);
@@ -341,7 +341,7 @@ const PokerGame = () => {
               
               return (
                 <div key={player.id}>
-                  {/* Player Avatar and Info - Outside table */}
+                  {/* Player Avatar and Info - Much further outside table */}
                   <div
                     className="absolute transform -translate-x-1/2 -translate-y-1/2"
                     style={{
@@ -371,7 +371,7 @@ const PokerGame = () => {
                     </div>
                   </div>
 
-                  {/* Player Chips - Between player name and cards */}
+                  {/* Player Chips - Between player name and cards with more space */}
                   <div
                     className="absolute transform -translate-x-1/2 -translate-y-1/2"
                     style={{
@@ -382,7 +382,7 @@ const PokerGame = () => {
                     <ChipStack totalChips={player.chips} size="sm" showTotal={false} />
                   </div>
 
-                  {/* Player Cards - Outside table with proper spacing */}
+                  {/* Player Cards - Much further outside table with proper spacing */}
                   <div
                     className="absolute transform -translate-x-1/2 -translate-y-1/2"
                     style={{
