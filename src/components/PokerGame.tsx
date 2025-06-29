@@ -114,11 +114,11 @@ const PokerGame = () => {
     return positions[botIndex] || { x: 50, y: 2, angle: 180 };
   };
 
-  // Get card position with more space from player names
+  // Get card position with cards on table edge
   const getCardPosition = (index: number, total: number) => {
     if (index === 0) {
-      // Human player cards - much more space above chips
-      return { x: 50, y: 82, angle: 0 };
+      // Human player cards - on bottom edge of table
+      return { x: 50, y: 72, angle: 0 };
     }
     
     const botIndex = index - 1;
@@ -127,36 +127,36 @@ const PokerGame = () => {
     const positions = [];
     
     if (totalBots === 1) {
-      positions.push({ x: 50, y: 18, angle: 180 });
+      positions.push({ x: 50, y: 28, angle: 180 });
     } else if (totalBots === 2) {
       positions.push(
-        { x: 10, y: 30, angle: 135 },
-        { x: 90, y: 30, angle: 45 }
+        { x: 25, y: 35, angle: 135 },
+        { x: 75, y: 35, angle: 45 }
       );
     } else if (totalBots === 3) {
       positions.push(
-        { x: 50, y: 18, angle: 180 },
-        { x: 5, y: 40, angle: 135 },
-        { x: 95, y: 40, angle: 45 }
+        { x: 50, y: 28, angle: 180 },
+        { x: 20, y: 40, angle: 135 },
+        { x: 80, y: 40, angle: 45 }
       );
     } else if (totalBots === 4) {
       positions.push(
-        { x: 20, y: 25, angle: 160 },
-        { x: 80, y: 25, angle: 20 },
-        { x: 2, y: 45, angle: 120 },
-        { x: 98, y: 45, angle: 60 }
+        { x: 35, y: 32, angle: 160 },
+        { x: 65, y: 32, angle: 20 },
+        { x: 15, y: 50, angle: 120 },
+        { x: 85, y: 50, angle: 60 }
       );
     } else if (totalBots === 5) {
       positions.push(
-        { x: 50, y: 18, angle: 180 },
-        { x: 15, y: 26, angle: 135 },
-        { x: 85, y: 26, angle: 45 },
-        { x: 2, y: 50, angle: 120 },
-        { x: 98, y: 50, angle: 60 }
+        { x: 50, y: 28, angle: 180 },
+        { x: 30, y: 33, angle: 135 },
+        { x: 70, y: 33, angle: 45 },
+        { x: 15, y: 55, angle: 120 },
+        { x: 85, y: 55, angle: 60 }
       );
     }
     
-    return positions[botIndex] || { x: 50, y: 18, angle: 180 };
+    return positions[botIndex] || { x: 50, y: 28, angle: 180 };
   };
 
   // Get chip position between player name and cards with more spacing
