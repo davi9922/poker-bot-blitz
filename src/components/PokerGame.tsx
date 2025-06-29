@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import PokerCard from "./PokerCard";
@@ -74,7 +73,7 @@ const PokerGame = () => {
   const getPlayerPosition = (index: number, total: number) => {
     if (index === 0) {
       // Human player always at bottom center
-      return { x: 50, y: 85, angle: 0 };
+      return { x: 50, y: 78, angle: 0 };
     }
     
     const botIndex = index - 1;
@@ -84,36 +83,126 @@ const PokerGame = () => {
     const positions = [];
     
     if (totalBots === 1) {
-      positions.push({ x: 50, y: 15, angle: 180 }); // Top center
+      positions.push({ x: 50, y: 22, angle: 180 }); // Top center
     } else if (totalBots === 2) {
       positions.push(
-        { x: 20, y: 25, angle: 135 }, // Top left
-        { x: 80, y: 25, angle: 45 }   // Top right
+        { x: 25, y: 30, angle: 135 }, // Top left
+        { x: 75, y: 30, angle: 45 }   // Top right
       );
     } else if (totalBots === 3) {
       positions.push(
-        { x: 50, y: 10, angle: 180 }, // Top center
-        { x: 15, y: 35, angle: 135 }, // Left
-        { x: 85, y: 35, angle: 45 }   // Right
+        { x: 50, y: 18, angle: 180 }, // Top center
+        { x: 20, y: 40, angle: 135 }, // Left
+        { x: 80, y: 40, angle: 45 }   // Right
       );
     } else if (totalBots === 4) {
       positions.push(
-        { x: 30, y: 15, angle: 160 }, // Top left
-        { x: 70, y: 15, angle: 20 },  // Top right
-        { x: 10, y: 45, angle: 120 }, // Mid left
-        { x: 90, y: 45, angle: 60 }   // Mid right
+        { x: 35, y: 22, angle: 160 }, // Top left
+        { x: 65, y: 22, angle: 20 },  // Top right
+        { x: 15, y: 45, angle: 120 }, // Mid left
+        { x: 85, y: 45, angle: 60 }   // Mid right
       );
     } else if (totalBots === 5) {
       positions.push(
-        { x: 50, y: 10, angle: 180 }, // Top center
-        { x: 25, y: 20, angle: 135 }, // Top left
-        { x: 75, y: 20, angle: 45 },  // Top right
-        { x: 12, y: 50, angle: 120 }, // Mid left
-        { x: 88, y: 50, angle: 60 }   // Mid right
+        { x: 50, y: 18, angle: 180 }, // Top center
+        { x: 30, y: 25, angle: 135 }, // Top left
+        { x: 70, y: 25, angle: 45 },  // Top right
+        { x: 18, y: 50, angle: 120 }, // Mid left
+        { x: 82, y: 50, angle: 60 }   // Mid right
       );
     }
     
-    return positions[botIndex] || { x: 50, y: 15, angle: 180 };
+    return positions[botIndex] || { x: 50, y: 18, angle: 180 };
+  };
+
+  // Get card position relative to player
+  const getCardPosition = (index: number, total: number) => {
+    if (index === 0) {
+      // Human player cards - closer to table
+      return { x: 50, y: 68, angle: 0 };
+    }
+    
+    const botIndex = index - 1;
+    const totalBots = total - 1;
+    
+    const positions = [];
+    
+    if (totalBots === 1) {
+      positions.push({ x: 50, y: 32, angle: 180 });
+    } else if (totalBots === 2) {
+      positions.push(
+        { x: 25, y: 38, angle: 135 },
+        { x: 75, y: 38, angle: 45 }
+      );
+    } else if (totalBots === 3) {
+      positions.push(
+        { x: 50, y: 28, angle: 180 },
+        { x: 20, y: 48, angle: 135 },
+        { x: 80, y: 48, angle: 45 }
+      );
+    } else if (totalBots === 4) {
+      positions.push(
+        { x: 35, y: 32, angle: 160 },
+        { x: 65, y: 32, angle: 20 },
+        { x: 15, y: 53, angle: 120 },
+        { x: 85, y: 53, angle: 60 }
+      );
+    } else if (totalBots === 5) {
+      positions.push(
+        { x: 50, y: 28, angle: 180 },
+        { x: 30, y: 35, angle: 135 },
+        { x: 70, y: 35, angle: 45 },
+        { x: 18, y: 58, angle: 120 },
+        { x: 82, y: 58, angle: 60 }
+      );
+    }
+    
+    return positions[botIndex] || { x: 50, y: 32, angle: 180 };
+  };
+
+  // Get chip position between player and table
+  const getChipPosition = (index: number, total: number) => {
+    if (index === 0) {
+      // Human player chips
+      return { x: 50, y: 73, angle: 0 };
+    }
+    
+    const botIndex = index - 1;
+    const totalBots = total - 1;
+    
+    const positions = [];
+    
+    if (totalBots === 1) {
+      positions.push({ x: 50, y: 27, angle: 180 });
+    } else if (totalBots === 2) {
+      positions.push(
+        { x: 25, y: 34, angle: 135 },
+        { x: 75, y: 34, angle: 45 }
+      );
+    } else if (totalBots === 3) {
+      positions.push(
+        { x: 50, y: 23, angle: 180 },
+        { x: 20, y: 44, angle: 135 },
+        { x: 80, y: 44, angle: 45 }
+      );
+    } else if (totalBots === 4) {
+      positions.push(
+        { x: 35, y: 27, angle: 160 },
+        { x: 65, y: 27, angle: 20 },
+        { x: 15, y: 49, angle: 120 },
+        { x: 85, y: 49, angle: 60 }
+      );
+    } else if (totalBots === 5) {
+      positions.push(
+        { x: 50, y: 23, angle: 180 },
+        { x: 30, y: 30, angle: 135 },
+        { x: 70, y: 30, angle: 45 },
+        { x: 18, y: 54, angle: 120 },
+        { x: 82, y: 54, angle: 60 }
+      );
+    }
+    
+    return positions[botIndex] || { x: 50, y: 27, angle: 180 };
   };
 
   const getPlayerAvatar = (index: number) => {
@@ -187,7 +276,7 @@ const PokerGame = () => {
                   {/* Community Cards Area */}
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex gap-3">
                     {Array.from({ length: 5 }).map((_, index) => (
-                      <div key={index} className="w-20 h-28 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
+                      <div key={index} className="w-24 h-32 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
                         {communityCards[index] ? (
                           <PokerCard card={communityCards[index]} />
                         ) : (
@@ -245,77 +334,101 @@ const PokerGame = () => {
 
             {/* Players around the table */}
             {players.map((player, index) => {
-              const position = getPlayerPosition(index, players.length);
+              const playerPosition = getPlayerPosition(index, players.length);
+              const cardPosition = getCardPosition(index, players.length);
+              const chipPosition = getChipPosition(index, players.length);
               const isCurrentPlayer = currentPlayerIndex === index;
               const isWinner = winners.includes(player.id);
               const isHuman = index === 0;
               
               return (
-                <div
-                  key={player.id}
-                  className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                  style={{
-                    left: `${position.x}%`,
-                    top: `${position.y}%`
-                  }}
-                >
+                <div key={player.id}>
                   {/* Player Avatar and Info */}
-                  <div className="flex flex-col items-center gap-2">
-                    {/* Avatar */}
-                    <div className={`relative w-16 h-16 rounded-full flex items-center justify-center text-2xl border-2 ${
-                      isCurrentPlayer 
-                        ? 'bg-blue-500 border-blue-400 shadow-lg shadow-blue-500/50' 
-                        : 'bg-slate-700 border-slate-600'
-                    }`}>
-                      {isWinner && <Crown className="absolute -top-2 -right-2 w-6 h-6 text-yellow-400" />}
-                      <span>{getPlayerAvatar(index)}</span>
-                      {isCurrentPlayer && (
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
-                      )}
-                    </div>
-                    
-                    {/* Player Name and Chips */}
-                    <div className="text-center">
-                      <div className="text-white text-sm font-semibold">{player.name}</div>
-                      {/* Player Chip Stack */}
-                      <div className="mt-1">
-                        <ChipStack totalChips={player.chips} size="sm" showTotal={false} />
+                  <div
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                    style={{
+                      left: `${playerPosition.x}%`,
+                      top: `${playerPosition.y}%`
+                    }}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      {/* Avatar */}
+                      <div className={`relative w-16 h-16 rounded-full flex items-center justify-center text-2xl border-2 ${
+                        isCurrentPlayer 
+                          ? 'bg-blue-500 border-blue-400 shadow-lg shadow-blue-500/50' 
+                          : 'bg-slate-700 border-slate-600'
+                      }`}>
+                        {isWinner && <Crown className="absolute -top-2 -right-2 w-6 h-6 text-yellow-400" />}
+                        <span>{getPlayerAvatar(index)}</span>
+                        {isCurrentPlayer && (
+                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+                        )}
                       </div>
-                      <div className="text-slate-400 text-xs mt-1">${player.chips.toLocaleString()}</div>
+                      
+                      {/* Player Name */}
+                      <div className="text-center">
+                        <div className="text-white text-sm font-semibold">{player.name}</div>
+                        <div className="text-slate-400 text-xs">${player.chips.toLocaleString()}</div>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Player Chips - positioned between player and table */}
+                  <div
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                    style={{
+                      left: `${chipPosition.x}%`,
+                      top: `${chipPosition.y}%`
+                    }}
+                  >
+                    <ChipStack totalChips={player.chips} size="sm" showTotal={false} />
+                  </div>
                   
-                  {/* Current Bet - positioned to the side of player */}
+                  {/* Player Cards - closer to the table */}
+                  <div
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                    style={{
+                      left: `${cardPosition.x}%`,
+                      top: `${cardPosition.y}%`
+                    }}
+                  >
+                    <div className="flex gap-1 justify-center">
+                      {player.hand.map((card, cardIndex) => (
+                        <div key={cardIndex} className="w-12 h-16">
+                          <PokerCard 
+                            card={showdown || !player.isBot ? card : null} 
+                            faceDown={!showdown && player.isBot} 
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Folded overlay */}
+                    {player.isFolded && (
+                      <div className="absolute inset-0 bg-red-900/80 rounded-lg flex items-center justify-center">
+                        <span className="text-red-300 font-bold text-sm">FOLD</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Bet - positioned near cards */}
                   {player.currentBet > 0 && (
-                    <div className={`absolute ${isHuman ? '-top-16' : 'top-20'} left-1/2 transform -translate-x-1/2 ${animatingBets[index] ? 'animate-pulse' : ''}`}>
+                    <div 
+                      className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${animatingBets[index] ? 'animate-pulse' : ''}`}
+                      style={{
+                        left: `${cardPosition.x + (isHuman ? 0 : (cardPosition.x > 50 ? -8 : 8))}%`,
+                        top: `${cardPosition.y + (isHuman ? -5 : 5)}%`
+                      }}
+                    >
                       <div className="flex gap-1 mb-1 justify-center">
                         {/* Show bet as chips */}
                         {player.currentBet >= 100 && <CasinoChip value={100} size="sm" />}
                         {player.currentBet >= 50 && player.currentBet % 100 >= 50 && <CasinoChip value={50} size="sm" />}
                         {player.currentBet >= 25 && player.currentBet % 50 >= 25 && <CasinoChip value={25} size="sm" />}
                       </div>
-                      <div className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      <div className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold text-center">
                         ${player.currentBet.toLocaleString()}
                       </div>
-                    </div>
-                  )}
-                  
-                  {/* Player Cards */}
-                  <div className={`flex gap-1 mt-2 justify-center ${isHuman ? 'mt-4' : ''}`}>
-                    {player.hand.map((card, cardIndex) => (
-                      <div key={cardIndex} className="w-12 h-16">
-                        <PokerCard 
-                          card={showdown || !player.isBot ? card : null} 
-                          faceDown={!showdown && player.isBot} 
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Folded overlay */}
-                  {player.isFolded && (
-                    <div className="absolute inset-0 bg-red-900/80 rounded-lg flex items-center justify-center">
-                      <span className="text-red-300 font-bold text-sm">FOLD</span>
                     </div>
                   )}
                 </div>
