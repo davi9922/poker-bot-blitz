@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import PokerCard from "./PokerCard";
@@ -69,101 +70,100 @@ const PokerGame = () => {
   const canRaise = (players[0]?.chips || 0) >= betAmount;
   const canAllIn = (players[0]?.chips || 0) > 0;
 
-  // Calculate player positions around the table (oval shape)
+  // Calculate player positions outside the table
   const getPlayerPosition = (index: number, total: number) => {
     if (index === 0) {
-      // Human player always at bottom center
+      // Human player at bottom, further from table
+      return { x: 50, y: 88, angle: 0 };
+    }
+    
+    const botIndex = index - 1;
+    const totalBots = total - 1;
+    
+    const positions = [];
+    
+    if (totalBots === 1) {
+      positions.push({ x: 50, y: 12, angle: 180 }); // Top, further out
+    } else if (totalBots === 2) {
+      positions.push(
+        { x: 20, y: 20, angle: 135 }, // Top left, further out
+        { x: 80, y: 20, angle: 45 }   // Top right, further out
+      );
+    } else if (totalBots === 3) {
+      positions.push(
+        { x: 50, y: 8, angle: 180 },  // Top center, further out
+        { x: 12, y: 35, angle: 135 }, // Left, further out
+        { x: 88, y: 35, angle: 45 }   // Right, further out
+      );
+    } else if (totalBots === 4) {
+      positions.push(
+        { x: 30, y: 12, angle: 160 }, // Top left, further out
+        { x: 70, y: 12, angle: 20 },  // Top right, further out
+        { x: 8, y: 40, angle: 120 },  // Mid left, further out
+        { x: 92, y: 40, angle: 60 }   // Mid right, further out
+      );
+    } else if (totalBots === 5) {
+      positions.push(
+        { x: 50, y: 8, angle: 180 },  // Top center, further out
+        { x: 25, y: 15, angle: 135 }, // Top left, further out
+        { x: 75, y: 15, angle: 45 },  // Top right, further out
+        { x: 10, y: 45, angle: 120 }, // Mid left, further out
+        { x: 90, y: 45, angle: 60 }   // Mid right, further out
+      );
+    }
+    
+    return positions[botIndex] || { x: 50, y: 8, angle: 180 };
+  };
+
+  // Get card position outside the table but closer to table than player
+  const getCardPosition = (index: number, total: number) => {
+    if (index === 0) {
+      // Human player cards - outside table but closer than player
       return { x: 50, y: 78, angle: 0 };
     }
     
     const botIndex = index - 1;
     const totalBots = total - 1;
     
-    // Distribute bots more evenly around the table, avoiding bottom area
     const positions = [];
     
     if (totalBots === 1) {
-      positions.push({ x: 50, y: 22, angle: 180 }); // Top center
+      positions.push({ x: 50, y: 22, angle: 180 });
     } else if (totalBots === 2) {
       positions.push(
-        { x: 25, y: 30, angle: 135 }, // Top left
-        { x: 75, y: 30, angle: 45 }   // Top right
+        { x: 20, y: 30, angle: 135 },
+        { x: 80, y: 30, angle: 45 }
       );
     } else if (totalBots === 3) {
       positions.push(
-        { x: 50, y: 18, angle: 180 }, // Top center
-        { x: 20, y: 40, angle: 135 }, // Left
-        { x: 80, y: 40, angle: 45 }   // Right
+        { x: 50, y: 18, angle: 180 },
+        { x: 12, y: 45, angle: 135 },
+        { x: 88, y: 45, angle: 45 }
       );
     } else if (totalBots === 4) {
       positions.push(
-        { x: 35, y: 22, angle: 160 }, // Top left
-        { x: 65, y: 22, angle: 20 },  // Top right
-        { x: 15, y: 45, angle: 120 }, // Mid left
-        { x: 85, y: 45, angle: 60 }   // Mid right
+        { x: 30, y: 22, angle: 160 },
+        { x: 70, y: 22, angle: 20 },
+        { x: 8, y: 50, angle: 120 },
+        { x: 92, y: 50, angle: 60 }
       );
     } else if (totalBots === 5) {
       positions.push(
-        { x: 50, y: 18, angle: 180 }, // Top center
-        { x: 30, y: 25, angle: 135 }, // Top left
-        { x: 70, y: 25, angle: 45 },  // Top right
-        { x: 18, y: 50, angle: 120 }, // Mid left
-        { x: 82, y: 50, angle: 60 }   // Mid right
+        { x: 50, y: 18, angle: 180 },
+        { x: 25, y: 25, angle: 135 },
+        { x: 75, y: 25, angle: 45 },
+        { x: 10, y: 55, angle: 120 },
+        { x: 90, y: 55, angle: 60 }
       );
     }
     
-    return positions[botIndex] || { x: 50, y: 18, angle: 180 };
+    return positions[botIndex] || { x: 50, y: 22, angle: 180 };
   };
 
-  // Get card position relative to player
-  const getCardPosition = (index: number, total: number) => {
-    if (index === 0) {
-      // Human player cards - closer to table
-      return { x: 50, y: 68, angle: 0 };
-    }
-    
-    const botIndex = index - 1;
-    const totalBots = total - 1;
-    
-    const positions = [];
-    
-    if (totalBots === 1) {
-      positions.push({ x: 50, y: 32, angle: 180 });
-    } else if (totalBots === 2) {
-      positions.push(
-        { x: 25, y: 38, angle: 135 },
-        { x: 75, y: 38, angle: 45 }
-      );
-    } else if (totalBots === 3) {
-      positions.push(
-        { x: 50, y: 28, angle: 180 },
-        { x: 20, y: 48, angle: 135 },
-        { x: 80, y: 48, angle: 45 }
-      );
-    } else if (totalBots === 4) {
-      positions.push(
-        { x: 35, y: 32, angle: 160 },
-        { x: 65, y: 32, angle: 20 },
-        { x: 15, y: 53, angle: 120 },
-        { x: 85, y: 53, angle: 60 }
-      );
-    } else if (totalBots === 5) {
-      positions.push(
-        { x: 50, y: 28, angle: 180 },
-        { x: 30, y: 35, angle: 135 },
-        { x: 70, y: 35, angle: 45 },
-        { x: 18, y: 58, angle: 120 },
-        { x: 82, y: 58, angle: 60 }
-      );
-    }
-    
-    return positions[botIndex] || { x: 50, y: 32, angle: 180 };
-  };
-
-  // Get chip position between player and table
+  // Get chip position between card and table
   const getChipPosition = (index: number, total: number) => {
     if (index === 0) {
-      // Human player chips
+      // Human player chips - between cards and table
       return { x: 50, y: 73, angle: 0 };
     }
     
@@ -176,29 +176,29 @@ const PokerGame = () => {
       positions.push({ x: 50, y: 27, angle: 180 });
     } else if (totalBots === 2) {
       positions.push(
-        { x: 25, y: 34, angle: 135 },
-        { x: 75, y: 34, angle: 45 }
+        { x: 20, y: 35, angle: 135 },
+        { x: 80, y: 35, angle: 45 }
       );
     } else if (totalBots === 3) {
       positions.push(
         { x: 50, y: 23, angle: 180 },
-        { x: 20, y: 44, angle: 135 },
-        { x: 80, y: 44, angle: 45 }
+        { x: 12, y: 50, angle: 135 },
+        { x: 88, y: 50, angle: 45 }
       );
     } else if (totalBots === 4) {
       positions.push(
-        { x: 35, y: 27, angle: 160 },
-        { x: 65, y: 27, angle: 20 },
-        { x: 15, y: 49, angle: 120 },
-        { x: 85, y: 49, angle: 60 }
+        { x: 30, y: 27, angle: 160 },
+        { x: 70, y: 27, angle: 20 },
+        { x: 8, y: 55, angle: 120 },
+        { x: 92, y: 55, angle: 60 }
       );
     } else if (totalBots === 5) {
       positions.push(
         { x: 50, y: 23, angle: 180 },
-        { x: 30, y: 30, angle: 135 },
-        { x: 70, y: 30, angle: 45 },
-        { x: 18, y: 54, angle: 120 },
-        { x: 82, y: 54, angle: 60 }
+        { x: 25, y: 30, angle: 135 },
+        { x: 75, y: 30, angle: 45 },
+        { x: 10, y: 60, angle: 120 },
+        { x: 90, y: 60, angle: 60 }
       );
     }
     
@@ -269,14 +269,14 @@ const PokerGame = () => {
             
             {/* Modern Poker Table */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-[800px] h-[400px] bg-gradient-to-br from-slate-700 via-slate-800 to-slate-700 rounded-full relative shadow-2xl border-4 border-slate-600">
+              <div className="w-[700px] h-[350px] bg-gradient-to-br from-slate-700 via-slate-800 to-slate-700 rounded-full relative shadow-2xl border-4 border-slate-600">
                 {/* Table felt */}
                 <div className="absolute inset-4 bg-gradient-to-br from-emerald-800 via-emerald-900 to-emerald-800 rounded-full shadow-inner">
                   
                   {/* Community Cards Area */}
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex gap-3">
                     {Array.from({ length: 5 }).map((_, index) => (
-                      <div key={index} className="w-24 h-32 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
+                      <div key={index} className="w-20 h-28 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
                         {communityCards[index] ? (
                           <PokerCard card={communityCards[index]} />
                         ) : (
@@ -295,7 +295,7 @@ const PokerGame = () => {
                     </div>
                   </div>
 
-                  {/* Pot Display - moved to bottom of table */}
+                  {/* Pot Display */}
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
                     <div className="bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-600">
                       <div className="text-yellow-400 font-bold text-sm">Pot ${pot.toLocaleString()}</div>
@@ -305,14 +305,13 @@ const PokerGame = () => {
               </div>
             </div>
 
-            {/* Central Pot Chips - positioned outside the table */}
+            {/* Central Pot Chips */}
             {pot > 0 && (
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-16">
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-12">
                 <div className="flex items-center justify-center gap-1">
                   {getPotChips().map((chip, index) => (
                     <div key={chip.value} className="relative animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                       <div className="flex flex-col items-center">
-                        {/* Stack of chips */}
                         {Array.from({ length: Math.min(chip.count, 5) }).map((_, stackIndex) => (
                           <div 
                             key={stackIndex}
@@ -332,7 +331,7 @@ const PokerGame = () => {
               </div>
             )}
 
-            {/* Players around the table */}
+            {/* Players around the table - now outside */}
             {players.map((player, index) => {
               const playerPosition = getPlayerPosition(index, players.length);
               const cardPosition = getCardPosition(index, players.length);
@@ -343,7 +342,7 @@ const PokerGame = () => {
               
               return (
                 <div key={player.id}>
-                  {/* Player Avatar and Info */}
+                  {/* Player Avatar and Info - Outside table */}
                   <div
                     className="absolute transform -translate-x-1/2 -translate-y-1/2"
                     style={{
@@ -373,18 +372,7 @@ const PokerGame = () => {
                     </div>
                   </div>
 
-                  {/* Player Chips - positioned between player and table */}
-                  <div
-                    className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                    style={{
-                      left: `${chipPosition.x}%`,
-                      top: `${chipPosition.y}%`
-                    }}
-                  >
-                    <ChipStack totalChips={player.chips} size="sm" showTotal={false} />
-                  </div>
-                  
-                  {/* Player Cards - closer to the table */}
+                  {/* Player Cards - Outside table but closer than player */}
                   <div
                     className="absolute transform -translate-x-1/2 -translate-y-1/2"
                     style={{
@@ -411,17 +399,27 @@ const PokerGame = () => {
                     )}
                   </div>
 
-                  {/* Current Bet - positioned near cards */}
+                  {/* Player Chips - Between cards and table */}
+                  <div
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                    style={{
+                      left: `${chipPosition.x}%`,
+                      top: `${chipPosition.y}%`
+                    }}
+                  >
+                    <ChipStack totalChips={player.chips} size="sm" showTotal={false} />
+                  </div>
+
+                  {/* Current Bet - Between chips and table */}
                   {player.currentBet > 0 && (
                     <div 
                       className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${animatingBets[index] ? 'animate-pulse' : ''}`}
                       style={{
-                        left: `${cardPosition.x + (isHuman ? 0 : (cardPosition.x > 50 ? -8 : 8))}%`,
-                        top: `${cardPosition.y + (isHuman ? -5 : 5)}%`
+                        left: `${chipPosition.x + (isHuman ? 0 : (chipPosition.x > 50 ? -5 : 5))}%`,
+                        top: `${chipPosition.y + (isHuman ? -3 : 3)}%`
                       }}
                     >
                       <div className="flex gap-1 mb-1 justify-center">
-                        {/* Show bet as chips */}
                         {player.currentBet >= 100 && <CasinoChip value={100} size="sm" />}
                         {player.currentBet >= 50 && player.currentBet % 100 >= 50 && <CasinoChip value={50} size="sm" />}
                         {player.currentBet >= 25 && player.currentBet % 50 >= 25 && <CasinoChip value={25} size="sm" />}
