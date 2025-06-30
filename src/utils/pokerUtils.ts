@@ -38,9 +38,9 @@ export const evaluateHand = (cards: PlayingCard[]): {
   strength: number; 
   description: string; 
   winningCards: PlayingCard[];
-  highCard?: string;
+  highCard: string;
 } => {
-  if (cards.length < 5) return { strength: 0, description: 'Incomplete hand', winningCards: [] };
+  if (cards.length < 5) return { strength: 0, description: 'Incomplete hand', winningCards: [], highCard: '' };
 
   const sortedCards = [...cards].sort((a, b) => getRankValue(b.rank) - getRankValue(a.rank));
   const ranks = sortedCards.map(card => getRankValue(card.rank));
