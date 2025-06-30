@@ -34,8 +34,13 @@ export const getRankValue = (rank: string): number => {
   }
 };
 
-export const evaluateHand = (cards: PlayingCard[]): { strength: number; description: string } => {
-  if (cards.length < 5) return { strength: 0, description: 'Incomplete hand' };
+export const evaluateHand = (cards: PlayingCard[]): { 
+  strength: number; 
+  description: string; 
+  winningCards: PlayingCard[];
+  highCard?: string;
+} => {
+  if (cards.length < 5) return { strength: 0, description: 'Incomplete hand', winningCards: [] };
 
   const sortedCards = [...cards].sort((a, b) => getRankValue(b.rank) - getRankValue(a.rank));
   const ranks = sortedCards.map(card => getRankValue(card.rank));
@@ -52,24 +57,121 @@ export const evaluateHand = (cards: PlayingCard[]): { strength: number; descript
   const isStraight = ranks.every((rank, i) => i === 0 || ranks[i - 1] - rank === 1) ||
     (ranks[0] === 14 && ranks[1] === 5 && ranks[2] === 4 && ranks[3] === 3 && ranks[4] === 2); // A-2-3-4-5 straight
 
+  // Find the winning cards for each hand type
+  const getCardsOfRank = (targetRank: number) => 
+    sortedCards.filter(card => getRankValue(card.rank) === targetRank);
+
+  const getRankName = (rank: number): string => {
+    switch (rank) {
+      case 14: return 'Ases';
+      case 13: return 'Reyes';
+      case 12: return 'Reinas';
+      case 11: return 'Jotas';
+      default: return rank.toString();
+    }
+  };
+
   // Hand rankings (higher is better)
   if (isStraight && isFlush) {
-    if (ranks[0] === 14 && ranks[1] === 13) return { strength: 10, description: 'Royal Flush' };
-    return { strength: 9, description: 'Straight Flush' };
+    if (ranks[0] === 14 && ranks[1] === 13) {
+      return { 
+        strength: 10, 
+        description: 'Escalera Real', 
+        winningCards: sortedCards,
+        highCard: 'As'
+      };
+    }
+    return { 
+      strength: 9, 
+      description: 'Escalera de Color', 
+      winningCards: sortedCards,
+      highCard: getRankName(ranks[0])
+    };
   }
-  if (counts[0] === 4) return { strength: 8, description: 'Four of a Kind' };
-  if (counts[0] === 3 && counts[1] === 2) return { strength: 7, description: 'Full House' };
-  if (isFlush) return { strength: 6, description: 'Flush' };
-  if (isStraight) return { strength: 5, description: 'Straight' };
-  if (counts[0] === 3) return { strength: 4, description: 'Three of a Kind' };
-  if (counts[0] === 2 && counts[1] === 2) return { strength: 3, description: 'Two Pair' };
-  if (counts[0] === 2) return { strength: 2, description: 'One Pair' };
-  return { strength: 1, description: 'High Card' };
+  
+  if (counts[0] === 4) {
+    const fourOfAKindRank = Object.entries(rankCounts).find(([_, count]) => count === 4)![0];
+    return { 
+      strength: 8, 
+      description: 'Póker', 
+      winningCards: getCardsOfRank(parseInt(fourOfAKindRank)),
+      highCard: getRankName(parseInt(fourOfAKindRank))
+    };
+  }
+  
+  if (counts[0] === 3 && counts[1] === 2) {
+    const threeOfAKindRank = Object.entries(rankCounts).find(([_, count]) => count === 3)![0];
+    const pairRank = Object.entries(rankCounts).find(([_, count]) => count === 2)![0];
+    return { 
+      strength: 7, 
+      description: 'Full House', 
+      winningCards: [...getCardsOfRank(parseInt(threeOfAKindRank)), ...getCardsOfRank(parseInt(pairRank))],
+      highCard: `${getRankName(parseInt(threeOfAKindRank))} sobre ${getRankName(parseInt(pairRank))}`
+    };
+  }
+  
+  if (isFlush) {
+    return { 
+      strength: 6, 
+      description: 'Color', 
+      winningCards: sortedCards,
+      highCard: getRankName(ranks[0])
+    };
+  }
+  
+  if (isStraight) {
+    return { 
+      strength: 5, 
+      description: 'Escalera', 
+      winningCards: sortedCards,
+      highCard: getRankName(ranks[0])
+    };
+  }
+  
+  if (counts[0] === 3) {
+    const threeOfAKindRank = Object.entries(rankCounts).find(([_, count]) => count === 3)![0];
+    return { 
+      strength: 4, 
+      description: 'Trío', 
+      winningCards: getCardsOfRank(parseInt(threeOfAKindRank)),
+      highCard: getRankName(parseInt(threeOfAKindRank))
+    };
+  }
+  
+  if (counts[0] === 2 && counts[1] === 2) {
+    const pairs = Object.entries(rankCounts)
+      .filter(([_, count]) => count === 2)
+      .map(([rank, _]) => parseInt(rank))
+      .sort((a, b) => b - a);
+    return { 
+      strength: 3, 
+      description: 'Doble Pareja', 
+      winningCards: [...getCardsOfRank(pairs[0]), ...getCardsOfRank(pairs[1])],
+      highCard: `${getRankName(pairs[0])} y ${getRankName(pairs[1])}`
+    };
+  }
+  
+  if (counts[0] === 2) {
+    const pairRank = Object.entries(rankCounts).find(([_, count]) => count === 2)![0];
+    return { 
+      strength: 2, 
+      description: 'Pareja', 
+      winningCards: getCardsOfRank(parseInt(pairRank)),
+      highCard: getRankName(parseInt(pairRank))
+    };
+  }
+  
+  return { 
+    strength: 1, 
+    description: 'Carta Alta', 
+    winningCards: [sortedCards[0]],
+    highCard: getRankName(ranks[0])
+  };
 };
 
-export const getBestHand = (playerCards: PlayingCard[], communityCards: PlayingCard[]): { strength: number; description: string } => {
+export const getBestHand = (playerCards: PlayingCard[], communityCards: PlayingCard[]) => {
   const allCards = [...playerCards, ...communityCards];
-  if (allCards.length < 5) return { strength: 0, description: 'Not enough cards' };
+  if (allCards.length < 5) return { strength: 0, description: 'Not enough cards', winningCards: [], highCard: '' };
 
   // Generate all possible 5-card combinations
   const combinations: PlayingCard[][] = [];
@@ -90,7 +192,7 @@ export const getBestHand = (playerCards: PlayingCard[], communityCards: PlayingC
   generateCombinations(0, []);
 
   // Find the best hand
-  let bestHand = { strength: 0, description: 'No hand' };
+  let bestHand = { strength: 0, description: 'No hand', winningCards: [], highCard: '' };
   combinations.forEach(combo => {
     const handValue = evaluateHand(combo);
     if (handValue.strength > bestHand.strength) {
@@ -101,38 +203,96 @@ export const getBestHand = (playerCards: PlayingCard[], communityCards: PlayingC
   return bestHand;
 };
 
+// Improved bot AI with more sophisticated decision making
 export const getBotAction = (
   hand: PlayingCard[], 
   communityCards: PlayingCard[], 
   currentBet: number, 
   botChips: number,
-  pot: number
+  pot: number,
+  gamePhase: 'preflop' | 'flop' | 'turn' | 'river' | 'showdown',
+  botPersonality: 'aggressive' | 'conservative' | 'balanced' = 'balanced'
 ): { action: 'check' | 'call' | 'raise' | 'fold'; amount?: number } => {
   const handStrength = getBestHand(hand, communityCards).strength;
-  const potOdds = currentBet / (pot + currentBet);
+  const potOdds = currentBet > 0 ? currentBet / (pot + currentBet) : 0;
+  const stackRatio = currentBet / botChips;
   
-  console.log(`Bot evaluating: hand strength ${handStrength}, pot odds ${potOdds}, current bet ${currentBet}`);
+  // Calculate outs and potential
+  const calculatePotential = () => {
+    if (gamePhase === 'preflop') {
+      // Pre-flop hand strength evaluation
+      const handRanks = hand.map(card => getRankValue(card.rank)).sort((a, b) => b - a);
+      const isPair = handRanks[0] === handRanks[1];
+      const isHighCards = handRanks[0] >= 10 && handRanks[1] >= 10;
+      const isSuited = hand[0].suit === hand[1].suit;
+      
+      if (isPair && handRanks[0] >= 10) return 0.8; // High pair
+      if (isPair) return 0.6; // Any pair
+      if (isHighCards && isSuited) return 0.7; // High suited
+      if (isHighCards) return 0.5; // High unsuited
+      if (isSuited) return 0.4; // Suited connectors
+      return 0.2; // Weak hand
+    }
+    
+    // Post-flop: actual hand strength
+    return handStrength / 10;
+  };
 
-  // Simple AI logic
-  if (handStrength >= 7) { // Full house or better
-    if (currentBet === 0) return { action: 'raise', amount: Math.min(botChips, pot * 2) };
-    return { action: 'raise', amount: Math.min(botChips, currentBet * 2) };
+  const potential = calculatePotential();
+  const aggression = botPersonality === 'aggressive' ? 1.3 : botPersonality === 'conservative' ? 0.7 : 1.0;
+  const adjustedPotential = potential * aggression;
+
+  console.log(`Bot evaluating: hand strength ${handStrength}, potential ${potential.toFixed(2)}, pot odds ${potOdds.toFixed(2)}, phase ${gamePhase}, personality ${botPersonality}`);
+
+  // Bluffing logic
+  const shouldBluff = () => {
+    if (botPersonality === 'conservative') return false;
+    const bluffChance = botPersonality === 'aggressive' ? 0.15 : 0.08;
+    return Math.random() < bluffChance && gamePhase !== 'preflop';
+  };
+
+  // Decision tree based on hand strength and situation
+  if (adjustedPotential >= 0.8 || handStrength >= 7) {
+    // Very strong hand - be aggressive
+    if (currentBet === 0) {
+      const raiseSize = Math.min(botChips, Math.max(pot * 0.5, 50));
+      return { action: 'raise', amount: raiseSize };
+    }
+    if (stackRatio < 0.3) {
+      const raiseSize = Math.min(botChips, currentBet * 2);
+      return { action: 'raise', amount: raiseSize };
+    }
+    return { action: 'call' };
   }
   
-  if (handStrength >= 4) { // Three of a kind or better
+  if (adjustedPotential >= 0.6 || handStrength >= 4) {
+    // Good hand - play cautiously aggressive
     if (currentBet === 0) return { action: 'check' };
-    if (currentBet <= botChips * 0.2) return { action: 'call' };
-    return { action: 'raise', amount: Math.min(botChips, currentBet * 1.5) };
+    if (stackRatio < 0.15) return { action: 'call' };
+    if (stackRatio < 0.25 && Math.random() < 0.3) {
+      const raiseSize = Math.min(botChips, currentBet * 1.5);
+      return { action: 'raise', amount: raiseSize };
+    }
+    return { action: 'call' };
   }
   
-  if (handStrength >= 2) { // Pair or better
+  if (adjustedPotential >= 0.4 || handStrength >= 2) {
+    // Mediocre hand - play carefully
     if (currentBet === 0) return { action: 'check' };
-    if (currentBet <= botChips * 0.1) return { action: 'call' };
+    if (stackRatio < 0.1 && potOdds < 0.3) return { action: 'call' };
+    if (shouldBluff() && currentBet > 0) {
+      const bluffSize = Math.min(botChips, pot * 0.4);
+      return { action: 'raise', amount: bluffSize };
+    }
     return { action: 'fold' };
   }
   
   // Weak hand
   if (currentBet === 0) return { action: 'check' };
-  if (Math.random() < 0.2 && currentBet <= botChips * 0.05) return { action: 'call' }; // Occasional bluff
+  if (shouldBluff() && stackRatio < 0.05) {
+    const bluffSize = Math.min(botChips, pot * 0.6);
+    return { action: 'raise', amount: bluffSize };
+  }
+  if (stackRatio < 0.05 && Math.random() < 0.1) return { action: 'call' }; // Desperate call
   return { action: 'fold' };
 };

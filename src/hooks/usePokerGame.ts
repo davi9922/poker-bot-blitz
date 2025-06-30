@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { PlayingCard } from "@/components/PokerCard";
 import { createDeck, getBestHand, getBotAction } from "@/utils/pokerUtils";
@@ -33,6 +32,11 @@ export const usePokerGame = (config: GameConfig) => {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [showdown, setShowdown] = useState(false);
   const [winners, setWinners] = useState<number[]>([]);
+
+  // Bot personalities for more variety
+  const botPersonalities: ('aggressive' | 'conservative' | 'balanced')[] = [
+    'balanced', 'aggressive', 'conservative', 'balanced', 'aggressive', 'conservative'
+  ];
 
   // Initialize players based on config
   const initializePlayers = useCallback(() => {
@@ -87,22 +91,25 @@ export const usePokerGame = (config: GameConfig) => {
     return allBetsEqual;
   }, [players]);
 
-  // Bot AI logic with improved decision making
+  // Enhanced bot AI logic with personalities
   const executeBotAction = useCallback(() => {
     const currentPlayer = players[currentPlayerIndex];
     if (!currentPlayer || !currentPlayer.isBot || showdown) return;
 
     console.log(`Bot ${currentPlayer.name} is thinking...`);
     
+    const personality = botPersonalities[currentPlayerIndex - 1] || 'balanced';
     const botAction = getBotAction(
       currentPlayer.hand,
       communityCards,
       currentBet - currentPlayer.currentBet,
       currentPlayer.chips,
-      pot
+      pot,
+      gamePhase,
+      personality
     );
 
-    console.log(`Bot ${currentPlayer.name} decides to:`, botAction);
+    console.log(`Bot ${currentPlayer.name} (${personality}) decides to:`, botAction);
 
     // Execute bot action after a delay to simulate thinking
     setTimeout(() => {
@@ -115,7 +122,6 @@ export const usePokerGame = (config: GameConfig) => {
           description: `${currentPlayer.name} se retira de la mano`,
         });
       } else if (botAction.action === 'check') {
-        // No chips to add for check
         toast({
           title: "Bot hace check",
           description: `${currentPlayer.name} hace check`,
@@ -160,8 +166,8 @@ export const usePokerGame = (config: GameConfig) => {
       }
       
       moveToNextPlayer();
-    }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
-  }, [players, currentPlayerIndex, currentBet, pot, communityCards, showdown, toast, moveToNextPlayer]);
+    }, 1000 + Math.random() * 2000);
+  }, [players, currentPlayerIndex, currentBet, pot, communityCards, showdown, toast, moveToNextPlayer, gamePhase]);
 
   // Check if round is complete and move to next phase
   useEffect(() => {
@@ -239,24 +245,23 @@ export const usePokerGame = (config: GameConfig) => {
       setGamePhase('showdown');
       setShowdown(true);
       
-      // Determine winners
+      // Determine winners with detailed hand information
       const activePlayers = players.filter(p => !p.isFolded);
       const playerHands = activePlayers.map(player => ({
         playerId: player.id,
+        playerName: player.name,
         hand: getBestHand(player.hand, communityCards)
       }));
       
       const bestStrength = Math.max(...playerHands.map(ph => ph.hand.strength));
-      const gameWinners = playerHands
-        .filter(ph => ph.hand.strength === bestStrength)
-        .map(ph => ph.playerId);
+      const gameWinners = playerHands.filter(ph => ph.hand.strength === bestStrength);
       
-      setWinners(gameWinners);
+      setWinners(gameWinners.map(w => w.playerId));
       
       // Distribute pot
       const winnerShare = Math.floor(pot / gameWinners.length);
       const updatedPlayers = players.map(player => {
-        if (gameWinners.includes(player.id)) {
+        if (gameWinners.some(w => w.playerId === player.id)) {
           return { ...player, chips: player.chips + winnerShare };
         }
         return player;
@@ -266,10 +271,14 @@ export const usePokerGame = (config: GameConfig) => {
       setPot(0);
       setGameState('finished');
       
-      const winnerNames = gameWinners.map(id => players.find(p => p.id === id)?.name).join(', ');
+      // Enhanced winner announcement with hand details
+      const winnerInfo = gameWinners[0];
+      const winnerNames = gameWinners.map(w => w.playerName).join(', ');
+      
       toast({
         title: gameWinners.length > 1 ? "¡Empate!" : "¡Tenemos ganador!",
-        description: `${winnerNames} ${gameWinners.length > 1 ? 'se reparten' : 'gana'} el pot de ${pot} fichas`,
+        description: `${winnerNames} ${gameWinners.length > 1 ? 'se reparten' : 'gana'} el pot de ${pot} fichas con ${winnerInfo.hand.description}${winnerInfo.hand.highCard ? ` (${winnerInfo.hand.highCard})` : ''}`,
+        duration: 8000,
       });
       
       return;
@@ -338,6 +347,21 @@ export const usePokerGame = (config: GameConfig) => {
   const botChips = players[1]?.chips || 0;
   const playerTurn = currentPlayerIndex === 0;
 
+  // Enhanced return with hand information
+  const getDetailedWinners = () => {
+    return winners.map(winnerId => {
+      const player = players.find(p => p.id === winnerId);
+      if (!player) return null;
+      const hand = getBestHand(player.hand, communityCards);
+      return {
+        id: winnerId,
+        name: player.name,
+        hand: hand,
+        isHuman: winnerId === 0
+      };
+    }).filter(Boolean);
+  };
+
   return {
     gameState,
     gamePhase,
@@ -353,6 +377,7 @@ export const usePokerGame = (config: GameConfig) => {
     showdown,
     winner: winners.length === 1 ? (winners[0] === 0 ? 'player' : 'bot') : null,
     winners,
+    detailedWinners: getDetailedWinners(),
     currentPlayerIndex,
     playerAction,
     dealNewHand,
